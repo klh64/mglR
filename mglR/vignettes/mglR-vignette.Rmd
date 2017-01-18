@@ -87,7 +87,7 @@ exampleMgl[[1]][2]
 ## Step 2: Add elements of interest to the list.  
 Functions beginning with *add* can be used to fill in the various elements for each gene.  Only those datasources of interest need be filled in, it is no problem for elements to remain empty.
 
-*Note: the example mgl `myMgl` was too large to include in the package so the function `ex` can be used to download and load it*
+*Note: the example mgl 'myMgl' was too large to include in the package so the function `exMgl` can be used to download and load it*
 ```{r, eval = c(5)}
 # Load `myMgl`, example mgl list
 exMgl() -> myMgl
