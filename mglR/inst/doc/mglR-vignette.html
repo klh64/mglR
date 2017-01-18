@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Katherine Hartmann" />
+
+<meta name="date" content="2017-01-17" />
+
+<title>mglR: an R package to integrate genomic data for candidate genes</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">mglR: an <strong>R</strong> package to integrate genomic data for candidate genes</h1>
+<h4 class="author"><em>Katherine Hartmann</em></h4>
+<h4 class="date"><em>2017-01-17</em></h4>
+
+
+
+<p>The package <strong>mglR</strong> standing for “Master Gene List” was developed to download and organize large-scale, publicly available genomic studies on a candidate gene scale. It also includes functions to integrate these datasources and compare features across candidate genes.</p>
+<hr />
+<p>This package makes use of the list structure in ‘R’ to organize datasources in an identical fashion for each gene of interest. It is building a nested list from which data can be pulled in a very systematic way. Practically speaking, the package can be divided into two components:</p>
+<ul>
+<li><p><em>1: building the list structure.</em> These are functions assigned to the family <em>elements</em> and all begin with <em>add</em>. These functions download and organize various datasources.</p></li>
+<li><p><em>2: integrating datasources across candidate genes.</em> These are functions assigned to the family <em>output</em> and all begin with <em>make</em>. These functions reflect some simple questions that maybe of general interest. For example: Are two genes co-expressed? Do any genes have the same traits assigned by GWAS? Are any SNPs assigned to a given gene both because they appear as an eQTL and a GWAS hit?</p></li>
+</ul>
+<p>The first section of this vignette covers how to build the list structure, the second discusses some pecularities of the list structure, and the third presents the functions introduced to integrate these datasources. A separate vignette “Building on mglR” presents some ideas about how this package may be expanded by the user to include additional datasources or functions to accomodate their specific interests.</p>
+<p>This package relies on several packages that have been developed by others to handle many of these datasources. Perhaps the most valuable, and the only one that is truly essential, is <em>biomaRt</em>. Although <em>biomaRt</em> does a phenomenal job in facilitating navigation between gene names, postions, etc. in a way that is critical for this package, it at times will throw error messages “Request to BioMart web service failed. Verify if you are still connected to the internet. Alternatively the BioMart web service is temporarily down.”. If this occurs please try the function again.</p>
+<p>Also, please note that a sample mgl list <em>myMgl</em> is included as a dataset in the package. As this list is complete it can be used to try any of the <em>make</em> functions.</p>
+<hr />
+<div id="building-the-list-structure" class="section level1">
+<h1>Building the list structure</h1>
+<div id="step-1-build-an-empty-list." class="section level2">
+<h2>Step 1: Build an empty list.</h2>
+<p>An <em>mgl list</em> can be generated from gene names, <em>ENSG</em> ids, or genomic coordinates using one of the following three functions.</p>
+<ol style="list-style-type: decimal">
+<li>colloquial gene names - <code>buildFromNames</code><br />
+</li>
+<li><em>ENSG</em> gene identifiers - <code>buildFromEnsgs</code><br />
+</li>
+<li>a single gene region (chromosome and hg19 position range) - <code>buildFromRegion</code></li>
+</ol>
+<p>Each of these functions will generate a standard list in R with length corresponding to the number of candidate genes. Each element of this list is itself a list with length of twenty corresponding to the number of datasources.</p>
+<p>The following are all equivalent.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Load the library</span>
+<span class="kw">library</span>(mglR)
+
+<span class="co"># Build an empty list from gene names</span>
+<span class="kw">buildFromNames</span>(<span class="kw">c</span>(<span class="st">&quot;RP11-109G10.2&quot;</span>, <span class="st">&quot;RP11-481A12.2&quot;</span>, <span class="st">&quot;MSMB&quot;</span>, <span class="st">&quot;NCOA4&quot;</span>, <span class="st">&quot;TIMM23&quot;</span>)) -&gt;<span class="st"> </span>exampleMgl
+
+<span class="co"># Build an empty list from ENSG identifiers</span>
+<span class="kw">buildFromEnsgs</span>(<span class="kw">c</span>(<span class="st">&quot;ENSG00000228326&quot;</span>, <span class="st">&quot;ENSG00000230553&quot;</span>, <span class="st">&quot;ENSG00000138294&quot;</span>, <span class="st">&quot;ENSG00000138293&quot;</span>, <span class="st">&quot;ENSG00000138297&quot;</span>)) -&gt;<span class="st"> </span>exampleMgl
+
+<span class="co"># Build an empty list from a single gene region</span>
+<span class="kw">buildFromRegion</span>(<span class="dv">10</span>,<span class="dv">51518775</span>,<span class="dv">51600147</span>) -&gt;<span class="st"> </span>exampleMgl</code></pre></div>
+<p>For each of the above, the output is an empty, nested list. Where the first level of heirarchy is the gene and the second is the datasource (i.e. <code>mgl[[gene]][[datasource]]</code>)</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># The output is a nested list</span>
+<span class="kw">class</span>(exampleMgl)
+## [1] &quot;list&quot;
+<span class="co"># </span>
+<span class="co"># The length of the list corresponds to the number of candidate genes</span>
+<span class="kw">length</span>(exampleMgl)
+## [1] 5
+<span class="kw">names</span>(exampleMgl)
+## [1] &quot;RP11-109G10.2&quot; &quot;RP11-481A12.2&quot; &quot;MSMB&quot;          &quot;NCOA4&quot;        
+## [5] &quot;TIMM23&quot;
+<span class="co">#</span>
+<span class="co"># Each element corresponding to a gene is itself a list</span>
+<span class="kw">class</span>(exampleMgl[[<span class="dv">1</span>]])
+## [1] &quot;list&quot;
+<span class="kw">names</span>(exampleMgl[[<span class="dv">1</span>]])
+##  [1] &quot;name&quot;                   &quot;enst&quot;                  
+##  [3] &quot;location&quot;               &quot;antisense&quot;             
+##  [5] &quot;go&quot;                     &quot;pubmed&quot;                
+##  [7] &quot;gtex.normalized&quot;        &quot;gtex.gene.counts&quot;      
+##  [9] &quot;gtex.transcript.counts&quot; &quot;gtex.gene.rpkm&quot;        
+## [11] &quot;gtex.transcript.rpkm&quot;   &quot;dnase&quot;                 
+## [13] &quot;transEqtls&quot;             &quot;cisEqtls&quot;              
+## [15] &quot;sqtlSeek&quot;               &quot;sqtlAltrans&quot;           
+## [17] &quot;pqtl&quot;                   &quot;gwasCatalog&quot;           
+## [19] &quot;grasp&quot;                  &quot;aei&quot;
+<span class="co">#</span>
+<span class="co"># Currently these are empty placeholders for a particular data source</span>
+exampleMgl[[<span class="dv">1</span>]][<span class="dv">2</span>]
+## $enst
+## [1] 2</code></pre></div>
+</div>
+<div id="step-2-add-elements-of-interest-to-the-list." class="section level2">
+<h2>Step 2: Add elements of interest to the list.</h2>
+<p>Functions beginning with <em>add</em> can be used to fill in the various elements for each gene. Only those datasources of interest need be filled in, it is no problem for elements to remain empty.</p>
+<p><strong>Element 2: <em>enst</em></strong></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## # Add transcript information
+## addEnst(myMgl) -&gt; myMgl
+## 
+## # example mgl[[gene]][[datasource]]
+myMgl[[<span class="dv">1</span>]][<span class="dv">2</span>]
+## $enst
+##   external_transcript_id ensembl_transcript_id   transcript_biotype
+## 1      RP11-109G10.2-001       ENST00000439573 processed_pseudogene</code></pre></div>
+<p><strong>Element 3: <em>location</em></strong></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## # Add position information
+## addLoc(myMgl) -&gt; myMgl
+## 
+## # example mgl[[gene]][[datasource]]
+myMgl[[<span class="dv">1</span>]][<span class="dv">3</span>]
+## $location
+##   chromosome_name start_position end_position strand
+## 1              10       51532102     51532572     -1</code></pre></div>
+<p><strong>Element 4: <em>antisense</em></strong></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## # Add information about transcripts in antisense position
+## addAntisense(myMgl) -&gt; myMgl
+## 
+## # example mgl[[gene]][[datasource]]. note: none of these genes have antisense transcripts
+myMgl[[<span class="dv">1</span>]][<span class="dv">4</span>]
+## $antisense
+## [1] external_gene_id      ensembl_transcript_id transcript_biotype   
+## [4] chromosome_name       start_position        end_position         
+## [7] strand               
+## &lt;0 rows&gt; (or 0-length row.names)</code></pre></div>
+<p><strong>Element 5: <em>go</em></strong></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## # Add gene ontology terms
+## addGo(myMgl) -&gt; myMgl
+## 
+## # example mgl[[gene]][[datasource]]
+myMgl[[<span class="dv">3</span>]][<span class="dv">5</span>]
+## $go
+##             name_1006
+## 1  biological_process
+## 2 extracellular space
+## 3             nucleus
+## 4  molecular_function</code></pre></div>
+<p><strong>Element 6: <em>pubmed</em></strong></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## # Add number of papers cataloged in PubMed
+## addPubmed(myMgl) -&gt; myMgl
+## 
+## # example mgl[[gene]][[datasource]]
+myMgl[[<span class="dv">4</span>]][<span class="dv">6</span>]
+## $pubmed
+## [1] 152</code></pre></div>
+<p><strong>Elements 7-11: <em>gtex.normalized</em>, <em>gtex.gene.counts</em>, <em>gtex.transcript.counts</em>, <em>gtex.gene.rpkm</em>, <em>gtex.transcript.rpkm</em></strong> Even with relatively small candidate gene lists (&lt; 10 genes), adding expression data to the list (<em>elements 7-11</em>) can be time and memory intensive. The function works by downloading the data locally (which can be saved for future use using the flag <code>saveDownload = TRUE</code>), subsetting the datasets for the genes of interest using grep commands run by R through unix, loading the subsetted data into R and incorporating the data into the <em>mgl list</em>. The most time consuming parts are downloading and subsetting the data. Both of these steps can be run outside of R using the command line if preferred.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## # Add expression data from GTEx
+## addExpression(myMgl, download = TRUE, saveDownload = FALSE, normalized = TRUE, xpGeneReads = TRUE, xpTranscriptReads = TRUE, xpGeneRpkm = TRUE, xpTranscriptRpkm = TRUE) -&gt; myMgl
+## 
+## # examples mgl[[gene]][[datasource]][[tissue]][expression&amp;covariates, people]
+## # normalized expression data
+myMgl[[<span class="dv">3</span>]][[<span class="dv">7</span>]][[<span class="dv">1</span>]][<span class="dv">1</span>:<span class="dv">3</span>,<span class="dv">1</span>:<span class="dv">3</span>]
+##                   GTEX.111CU GTEX.111FC GTEX.111VG
+## ENSG00000138294.9  0.9388143  -1.116486  0.1049847
+## C1                -0.0180000  -0.015600 -0.0197000
+## C2                 0.0010000   0.016800  0.0108000
+## # gene reads
+myMgl[[<span class="dv">3</span>]][[<span class="dv">8</span>]][[<span class="dv">1</span>]][,<span class="dv">1</span>:<span class="dv">2</span>]
+##                 GTEX-111CU-1826-SM-5GZYN GTEX-111FC-0226-SM-5N9B8
+## ENSG00000138294                        4                        0
+## # transcript RPKM
+myMgl[[<span class="dv">3</span>]][[<span class="dv">11</span>]][[<span class="dv">1</span>]][,<span class="dv">1</span>:<span class="dv">2</span>]
+##                 GTEX-111CU-1826-SM-5GZYN GTEX-111FC-0226-SM-5N9B8
+## ENST00000358559                  0.42109                        0
+## ENST00000487536                  0.00000                        0
+## ENST00000474170                  0.00000                        0
+## ENST00000478719                  0.00000                        0
+## ENST00000466268                  0.00000                        0
+## ENST00000298239                  0.00000                        0</code></pre></div>
+<p><strong>Element 12: <em>dnase</em></strong></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## # Add results from Maurano Nat. Genetics 2015
+## addDnase(myMgl) -&gt; myMgl
+## 
+## # example mgl[[gene]][[datasource]]
+myMgl[[<span class="dv">3</span>]][<span class="dv">12</span>]
+## $dnase
+##   chrom chromStart chromEnd         rs numhets allele.1 readsA allele.2
+## 1 chr10   51553064 51553065 rs10994201       4        G     86        A
+## 2 chr10   51558124 51558125  rs7076948       7        C     71        T
+## 3 chr10   51559468 51559469  rs7904463       8        T    177        C
+## 4 chr10   51561798 51561799 rs17178655      14        A    235        G
+##   readsB totalReads pctRef  q.value    significance.level
+## 1     76        162  0.469 7.63e-01        not_imbalanced
+## 2     64        135  0.474 8.53e-01        not_imbalanced
+## 3     71        248  0.286 5.17e-10 imbalanced_(0.1%_FDR)
+## 4    126        361  0.349 2.70e-07   imbalanced_(5%_FDR)</code></pre></div>
+<p><strong>Element 13: <em>transEqtls</em></strong></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## # Add transEqtl data from GTEx
+## addTransEqtl(myMgl) -&gt; myMgl
+## 
+## # example mgl[[gene]][[datasource]][[tissue]]
+myMgl[[<span class="dv">4</span>]][[<span class="dv">13</span>]][<span class="dv">20</span>]
+## $`Heart - Left Ventricle`
+##  [1] DiscoveryMode            rs_id_dbSNP142_GRCh37p13
+##  [3] variant_id               snp_chr                 
+##  [5] snp_pos                  gene_id                 
+##  [7] gene_name                tissue_site_detail      
+##  [9] pvalue                   FDR                     
+## [11] cis.eGene_id             cis.eGene_name          
+## [13] GWAS_pvalue              trait                   
+## [15] PMID                    
+## &lt;0 rows&gt; (or 0-length row.names)</code></pre></div>
+<p><strong>Element 14: <em>cisEqtls</em></strong></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## # Add cisEqtl data from GTEx
+## addCisEqtl(myMgl, download = TRUE, saveDownload = FALSE) -&gt; myMgl
+## 
+## # example mgl[[gene]][[datasource]][[tissue]]
+myMgl[[<span class="dv">4</span>]][[<span class="dv">14</span>]][[<span class="dv">44</span>]][<span class="dv">1</span>:<span class="dv">3</span>,]
+##        tissue          variant_id            gene_id tss_distance
+## 1 Whole_Blood 10_51489257_T_C_b37 ENSG00000138293.15       -75851
+## 2 Whole_Blood 10_51489667_T_C_b37 ENSG00000138293.15       -75441
+## 3 Whole_Blood 10_51490628_T_C_b37 ENSG00000138293.15       -74480
+##   pval_nominal     slope  slope_se slope_fpkm slope_fpkm_se
+## 1  8.87850e-06 -0.143856 0.0318135   -1.92895       2.39498
+## 2  2.45591e-05 -0.129756 0.0302692   -1.78156       2.27139
+## 3  1.45179e-05 -0.137201 0.0311152   -1.50279       2.33963
+##   pval_nominal_threshold min_pval_nominal   pval_beta       rsId
+## 1            7.60232e-05      1.12164e-07 0.000288916 rs11595194
+## 2            7.60232e-05      1.12164e-07 0.000288916 rs12783102
+## 3            7.60232e-05      1.12164e-07 0.000288916 rs10825136</code></pre></div>
+<p><strong>Element 15: <em>sqtlSeek</em></strong></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## # Add splicing QTL data from GTEx sqtlSeek algorithm
+## addSqtlSeek(myMgl) -&gt; myMgl
+## 
+## # example mgl[[gene]][[datasource]][[tissue]]. note: none of these genes have splicing QTls as defined by sqtlSeek
+myMgl[[<span class="dv">1</span>]][[<span class="dv">15</span>]][<span class="dv">1</span>]
+## $AdiposeTissue
+## [1] snpId    pv       transId1 transId2
+## &lt;0 rows&gt; (or 0-length row.names)</code></pre></div>
+<p><strong>Element 16: <em>sqtlAltrans</em></strong></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## # Add splicing QTL data from GTEx Altrans algorithm
+## addSqtlAltrans(myMgl) -&gt; myMgl
+## 
+## # example mgl[[gene]][[datasource]][[tissue]]
+myMgl[[<span class="dv">4</span>]][[<span class="dv">16</span>]][<span class="dv">2</span>]
+## $ArteryTibial
+##       Variation X.log10.p.
+## 2921  rs4519043     6.4089
+## 2922 rs79490275     6.1975</code></pre></div>
+<p><strong>Element 17: <em>pqtl</em></strong></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## # Add protein truncating variants from GTEx
+## addPtv(myMgl) -&gt; myMgl
+## 
+## # example mgl[[gene]][[datasource]][[tissue]]
+myMgl[[<span class="dv">4</span>]][[<span class="dv">17</span>]][[<span class="dv">1</span>]][<span class="dv">1</span>:<span class="dv">2</span>,]
+##       identifier of snp alternative identifier of SNP
+## 13458       rs117273914                             -
+## 13935        rs72795897                             -
+##       name of exon that exon belongs to           chr_start_end
+## 13458                             NCOA4 chr10_51580880_51580968
+## 13935                             NCOA4 chr10_51580880_51580968
+##       chromosome of SNP chromosome of exon location of SNP
+## 13458                10                 10        51580469
+## 13935                10                 10        51581889
+##       location of middle point of exon distance between 8 and 9
+## 13458                         51580924                      455
+## 13935                         51580924                      965
+##       spearman correlation    pvalue -log10(pvalue) NA
+## 13458                0.135 0.1940369         0.7121 NA
+## 13935                0.132 0.2062249         0.6857 NA</code></pre></div>
+<p><strong>Element 18: <em>gwasCatalog</em></strong></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## # Add GWAS data from the NHGRI-EBI GWAS Catalog
+## addGwasCatalog(myMgl, range = 10, download = TRUE, saveDownload = FALSE) -&gt; myMgl
+## 
+## # example mgl[[gene]][[datasource]][GWASEntry, Details]
+myMgl[[<span class="dv">3</span>]][[<span class="dv">18</span>]][<span class="dv">1</span>:<span class="dv">2</span>,]
+##    DATE.ADDED.TO.CATALOG PUBMEDID FIRST.AUTHOR       DATE   JOURNAL
+## 27            2008-06-16 18264097     Eeles RA 2008-02-10 Nat Genet
+## 34            2008-06-16 18264096     Thomas G 2008-02-10 Nat Genet
+##                                    LINK
+## 27 www.ncbi.nlm.nih.gov/pubmed/18264097
+## 34 www.ncbi.nlm.nih.gov/pubmed/18264096
+##                                                                              STUDY
+## 27  Multiple newly identified loci associated with prostate cancer susceptibility.
+## 34 Multiple loci identified in a genome-wide association study of prostate cancer.
+##      DISEASE.TRAIT
+## 27 Prostate cancer
+## 34 Prostate cancer
+##                                                INITIAL.SAMPLE.SIZE
+## 27 1,854 European ancestry cases, 1,894 European ancestry controls
+## 34 1,172 European ancestry cases, 1,157 European ancestry controls
+##                                            REPLICATION.SAMPLE.SIZE
+## 27 3,268 European ancestry cases, 3,366 European ancestry controls
+## 34 3,941 European ancestry cases, 3,964 European ancestry controls
+##      REGION CHR_ID  CHR_POS REPORTED.GENE.S.      MAPPED_GENE
+## 27 10q11.22     10 46046326             MSMB MSMB - RPL23AP61
+## 34 10q11.22     10 46046326             MSMB MSMB - RPL23AP61
+##    UPSTREAM_GENE_ID DOWNSTREAM_GENE_ID SNP_GENE_IDS UPSTREAM_GENE_DISTANCE
+## 27             4477             728484                                  57
+## 34             4477             728484                                  57
+##    DOWNSTREAM_GENE_DISTANCE STRONGEST.SNP.RISK.ALLELE       SNPS MERGED
+## 27                    16924              rs10993994-T rs10993994      0
+## 34                    16924              rs10993994-T rs10993994      0
+##    SNP_ID_CURRENT               CONTEXT INTERGENIC RISK.ALLELE.FREQUENCY
+## 27       10993994 upstream_gene_variant          1                  0.40
+## 34       10993994 upstream_gene_variant          1                  0.40
+##    P.VALUE PVALUE_MLOG P.VALUE..TEXT. OR.or.BETA X95..CI..TEXT.
+## 27   9e-29    28.04576                      1.25    [1.17-1.34]
+## 34   7e-13    12.15490                      1.16    [1.04-1.29]
+##    PLATFORM..SNPS.PASSING.QC. CNV
+## 27          Illumina [541129]   N
+## 34          Illumina [527869]   N</code></pre></div>
+<p><strong>Element 19: <em>grasp</em></strong></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Add GWAS data from GRASP</span>
+<span class="kw">addGrasp</span>(myMgl) -&gt;<span class="st"> </span>myMgl
+
+<span class="co"># example</span>
+<span class="co">#myMgl[[1]][[19]][1:3,]</span></code></pre></div>
+<p><strong>Element 20: <em>aei</em></strong> Please note that access to allelic ratios from GTEx requires approval and download through dbGaP. See <a href="http:/www.ncbi.nlm.nih.gov/gap" class="uri">http:/www.ncbi.nlm.nih.gov/gap</a></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Add allelic ratios from GTEx</span>
+<span class="kw">addAei</span>(myMgl, <span class="dt">fp =</span> <span class="st">'~/Downloads'</span>) -&gt;<span class="st"> </span>myMgl
+
+<span class="co"># example mgl[[gene]][[datasource]][[tissue]][SNP,Details]</span>
+myMgl[[<span class="dv">4</span>]][[<span class="dv">20</span>]][[<span class="dv">1</span>]][<span class="dv">1</span>:<span class="dv">3</span>,]</code></pre></div>
+<hr />
+</div>
+</div>
+<div id="quirks-of-the-list" class="section level1">
+<h1>Quirks of the list</h1>
+<div id="its-a-list" class="section level2">
+<h2>It’s a list!</h2>
+<p>The list that is created can be compared to filing cabinet. Where the cabinet represents the entirety of the list, each drawer a different gene, and each datasource a folder within the drawer. If you simply print the list to the screen in R, it would be like dumping an entire filing cabinet full of papers all over the floor. Even printing one element/gene is too much and in some cases the datasource itself (i.e. the folder) is really big and even this is too much to print to the screen. To cautiously work your way through the list, use <code>class</code> and <code>dim</code> or <code>length</code> to preview and subsetting either of lists <code>[[#]]</code> or of dataframes <code>[row#, column#]</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># check class</span>
+<span class="kw">class</span>(myMgl[[<span class="dv">3</span>]][[<span class="dv">12</span>]])
+## [1] &quot;data.frame&quot;
+<span class="co"># check dimensions</span>
+<span class="kw">dim</span>(myMgl[[<span class="dv">3</span>]][[<span class="dv">12</span>]])
+## [1]  4 13
+<span class="co"># print subset</span>
+myMgl[[<span class="dv">3</span>]][[<span class="dv">12</span>]][<span class="dv">1</span>:<span class="dv">3</span>,]
+##   chrom chromStart chromEnd         rs numhets allele.1 readsA allele.2
+## 1 chr10   51553064 51553065 rs10994201       4        G     86        A
+## 2 chr10   51558124 51558125  rs7076948       7        C     71        T
+## 3 chr10   51559468 51559469  rs7904463       8        T    177        C
+##   readsB totalReads pctRef  q.value    significance.level
+## 1     76        162  0.469 7.63e-01        not_imbalanced
+## 2     64        135  0.474 8.53e-01        not_imbalanced
+## 3     71        248  0.286 5.17e-10 imbalanced_(0.1%_FDR)</code></pre></div>
+</div>
+<div id="working-with-the-list" class="section level2">
+<h2>Working with the list</h2>
+<p>Included are two functions to make navigating the mgl list a bit easier.</p>
+<p><strong>(1) Which elements have been added?</strong> Use <code>listElements</code> to display which elements have been added or which ones are still missing.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># display missing elements</span>
+<span class="kw">listElements</span>(exampleMgl, <span class="dt">added =</span> <span class="ot">FALSE</span>)
+##                   enst               location              antisense 
+##                      2                      3                      4 
+##                     go                 pubmed        gtex.normalized 
+##                      5                      6                      7 
+##       gtex.gene.counts gtex.transcript.counts         gtex.gene.rpkm 
+##                      8                      9                     10 
+##   gtex.transcript.rpkm                  dnase             transEqtls 
+##                     11                     12                     13 
+##               cisEqtls               sqtlSeek            sqtlAltrans 
+##                     14                     15                     16 
+##                   pqtl            gwasCatalog                  grasp 
+##                     17                     18                     19 
+##                    aei 
+##                     20
+<span class="co">#</span>
+<span class="co"># display elements that have already been added</span>
+<span class="kw">listElements</span>(exampleMgl, <span class="dt">added =</span> <span class="ot">TRUE</span>)
+## name 
+##    1</code></pre></div>
+<p><strong>(2) One element at a time.</strong> Use <code>listSeparate</code> to subset the list with just one datasource for all genes (i.e. to get ensts only for all genes)</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># subset the second element with ENST information</span>
+<span class="kw">listSeparate</span>(myMgl, <span class="dv">2</span>) -&gt;<span class="st"> </span>subset
+<span class="co">#</span>
+subset
+## $`RP11-109G10.2`
+##   external_transcript_id ensembl_transcript_id   transcript_biotype
+## 1      RP11-109G10.2-001       ENST00000439573 processed_pseudogene
+## 
+## $`RP11-481A12.2`
+##   external_transcript_id ensembl_transcript_id   transcript_biotype
+## 1      RP11-481A12.2-001       ENST00000449598 processed_pseudogene
+## 
+## $MSMB
+##   external_transcript_id ensembl_transcript_id   transcript_biotype
+## 1               MSMB-001       ENST00000358559       protein_coding
+## 2               MSMB-003       ENST00000487536 processed_transcript
+## 3               MSMB-006       ENST00000474170 processed_transcript
+## 4               MSMB-004       ENST00000478719 processed_transcript
+## 5               MSMB-005       ENST00000466268 processed_transcript
+## 6               MSMB-002       ENST00000298239       protein_coding
+## 
+## $NCOA4
+##    external_transcript_id ensembl_transcript_id   transcript_biotype
+## 1               NCOA4-005       ENST00000498586 processed_transcript
+## 2               NCOA4-001       ENST00000374087       protein_coding
+## 3               NCOA4-003       ENST00000344348       protein_coding
+## 4               NCOA4-002       ENST00000374082       protein_coding
+## 5               NCOA4-004       ENST00000431200       protein_coding
+## 6               NCOA4-203       ENST00000438493       protein_coding
+## 7               NCOA4-205       ENST00000452682       protein_coding
+## 8               NCOA4-204       ENST00000443446       protein_coding
+## 9               NCOA4-202       ENST00000430396       protein_coding
+## 10              NCOA4-201       ENST00000414907       protein_coding
+## 
+## $TIMM23
+##   external_transcript_id ensembl_transcript_id   transcript_biotype
+## 1             TIMM23-007       ENST00000444743       protein_coding
+## 2             TIMM23-001       ENST00000260867       protein_coding
+## 3             TIMM23-006       ENST00000485812 processed_transcript
+## 4             TIMM23-002       ENST00000374065       protein_coding
+## 5             TIMM23-003       ENST00000476778 processed_transcript
+## 6             TIMM23-004       ENST00000469116 processed_transcript
+## 7             TIMM23-005       ENST00000480051 processed_transcript
+## 8             TIMM23-201       ENST00000374064       protein_coding</code></pre></div>
+</div>
+<div id="gene-names" class="section level2">
+<h2>Gene Names</h2>
+<p>Colloquial gene names (e.g. RP11-109G10.2) are often far more convienent for every day use than ENSG identifiers (e.g. ENSG00000228326), although colloquial names are not always specific. <em>biomaRt</em> does a phenomenal job converting between different gene names and identifiers. However, in the case that biomaRt is not able to find a corresponding ENSG id for a given gene a warning message will be displayed. This should be fixed using <code>missNames</code> and <code>fixNames</code> as various functions in the package rely on ENSG ids. bklIn the cases where these ENSG ids are not identified through <em>biomaRt</em> and must be fixed, they can often be found by googling the gene name. GeneCards <a href="http://www.genecards.org/" class="uri">http://www.genecards.org/</a> does a particularly good job cataloging various colloquial names for a given gene and always provides the ENSG id.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Build an empty list from gene names</span>
+<span class="kw">buildFromNames</span>(<span class="kw">c</span>(<span class="st">&quot;RP11-109G10.2&quot;</span>, <span class="st">&quot;RP11-481A12.2&quot;</span>, <span class="st">&quot;MSMB&quot;</span>, <span class="st">&quot;NCOA4&quot;</span>, <span class="st">&quot;TIMM23&quot;</span>)) -&gt;<span class="st"> </span>newMgl
+## Warning in buildFromNames(c(&quot;RP11-109G10.2&quot;, &quot;RP11-481A12.2&quot;, &quot;MSMB&quot;,
+## &quot;NCOA4&quot;, : Gene names missing: RP11-109G10.2, RP11-481A12.2
+<span class="co">#</span>
+<span class="co"># Gene name was not found by *biomaRt*</span>
+newMgl[[<span class="dv">1</span>]][<span class="dv">1</span>]
+## $name
+## [1] &quot;NA&quot;
+<span class="co">#</span>
+<span class="co"># Identify missing names</span>
+<span class="kw">missNames</span>(newMgl) 
+## [1] &quot;RP11-109G10.2&quot; &quot;RP11-481A12.2&quot;
+<span class="co">#</span>
+<span class="co"># Fix missing names</span>
+<span class="kw">fixNames</span>(newMgl, <span class="kw">c</span>(<span class="st">'ENSG00000228326'</span>, <span class="st">'ENSG00000220508'</span>)) -&gt;<span class="st"> </span>newMgl
+<span class="co">#</span>
+<span class="co"># Gene names now filled in</span>
+newMgl[[<span class="dv">1</span>]][<span class="dv">1</span>]
+## $name
+##   external_gene_id ensembl_gene_id description
+## 1    RP11-109G10.2 ENSG00000228326          NA</code></pre></div>
+</div>
+<div id="snp-ids" class="section level2">
+<h2>SNP Ids</h2>
+<p>The cisEqtl data released by GTEx uses chr_pos… instead of rs numbers to identify SNPs. In order to add rs ids use <code>fixSnpIds</code>. It is preferable to use rs Ids for functions like <code>makeSnps</code>, <code>makeMultiEqtl</code>, <code>makeOverlap</code>, and <code>makeOverlapTable</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># add rs Id</span>
+<span class="kw">fixSnpIds</span>(myMgl) -&gt;<span class="st"> </span>myMgl</code></pre></div>
+</div>
+<div id="dependent-elements" class="section level2">
+<h2>Dependent Elements</h2>
+<p>Some elements are dependent on one another. For example adding information from the GWAS Catalog (element 18) requires that position information for each gene (element 3) has been filled in because GWAS-based associations are pulled not only based on the assigned gene name but also on the position range of the gene. In these instances of inter-dependent elements, if the required element has not yet been filled in an error message appears directing the user to add the required information.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Build list</span>
+## buildFromRegion(10,51518775,51600147) -&gt; exampleMgl
+<span class="co">#</span>
+<span class="co"># Add GWAS data from the NHGRI-EBI GWAS Catalog [element #18]</span>
+<span class="kw">addGwasCatalog</span>(exampleMgl, <span class="dt">range =</span> <span class="dv">10</span>, <span class="dt">download =</span> <span class="ot">TRUE</span>, <span class="dt">saveDownload =</span> <span class="ot">FALSE</span>) -&gt;<span class="st"> </span>exampleMgl
+## Error in addGwasCatalog(exampleMgl, range = 10, download = TRUE, saveDownload = FALSE): location data not available. see function addLoc
+<span class="co">#</span>
+<span class="co"># Add position information [element #3]</span>
+<span class="kw">addLoc</span>(exampleMgl) -&gt;<span class="st"> </span>exampleMgl
+<span class="co">#</span>
+exampleMgl[[<span class="dv">1</span>]][[<span class="dv">3</span>]]
+##   chromosome_name start_position end_position strand
+## 1              10       51532102     51532572     -1
+<span class="co">#</span>
+<span class="co"># Add GWAS data from the NHGRI-EBI GWAS Catalog [element #18]</span>
+<span class="kw">addGwasCatalog</span>(exampleMgl, <span class="dt">range =</span> <span class="dv">10</span>, <span class="dt">download =</span> <span class="ot">TRUE</span>, <span class="dt">saveDownload =</span> <span class="ot">FALSE</span>) -&gt;<span class="st"> </span>exampleMgl
+<span class="co">#</span>
+<span class="co"># example mgl[[gene]][[datasource]][GWASEntry, Details]</span>
+exampleMgl[[<span class="dv">3</span>]][[<span class="dv">18</span>]][<span class="dv">1</span>:<span class="dv">2</span>,<span class="dv">1</span>:<span class="dv">5</span>]
+##   DATE.ADDED.TO.CATALOG PUBMEDID FIRST.AUTHOR       DATE   JOURNAL
+## 1            2008-06-16 18264097     Eeles RA 2008-02-10 Nat Genet
+## 2            2008-06-16 18264096     Thomas G 2008-02-10 Nat Genet</code></pre></div>
+<hr />
+</div>
+</div>
+<div id="using-the-list" class="section level1">
+<h1>Using the list</h1>
+<div id="gene-ontology" class="section level2">
+<h2>Gene Ontology</h2>
+<p>Two functions <code>makeGo</code> and <code>makeGoSearch</code> are included to organize Gene Ontology terms and determine those GO terms that are shared among candidate genes.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># summarize gene ontology (GO) terms</span>
+<span class="kw">makeGo</span>(myMgl, <span class="dt">saveFile =</span> F) -&gt;<span class="st"> </span>myGo
+<span class="co">#</span>
+<span class="co"># output of makeGo is a list with three elements</span>
+<span class="kw">class</span>(myGo)
+## [1] &quot;list&quot;
+<span class="kw">names</span>(myGo)
+## [1] &quot;goRes&quot;   &quot;goTable&quot; &quot;goCount&quot;
+<span class="co">#</span>
+<span class="co">#goRes is a list with GO terms for each gene (subset of element 5 from mgl)</span>
+myGo[[<span class="dv">1</span>]][[<span class="dv">4</span>]]
+##                                             name_1006
+## 1                 androgen receptor signaling pathway
+## 2                                 response to hormone
+## 3                              male gonad development
+## 4 positive regulation of transcription, DNA-dependent
+## 5                        transcription, DNA-templated
+## 6                                             nucleus
+## 7                           androgen receptor binding
+## 8                  transcription coactivator activity
+<span class="co">#</span>
+<span class="co"># goTable is a dataframe with GO term and gene</span>
+myGo[[<span class="dv">2</span>]][<span class="dv">1</span>:<span class="dv">2</span>,]
+##                GoTerm Gene
+## 1  biological_process MSMB
+## 2 extracellular space MSMB
+<span class="co">#</span>
+<span class="co"># goCount is a ranking of GO terms and the number of genes they are assigned to</span>
+myGo[[<span class="dv">3</span>]][<span class="dv">1</span>:<span class="dv">2</span>]
+## 
+##                   nucleus androgen receptor binding 
+##                         2                         1
+<span class="co">#</span>
+<span class="co"># to search for genes with a specific GO term</span>
+<span class="kw">makeGoSearch</span>(myMgl, <span class="st">'nucleus'</span>, <span class="dt">go =</span> myGo, <span class="dt">saveFile =</span> F)
+## [1] &quot;MSMB&quot;  &quot;NCOA4&quot;</code></pre></div>
+</div>
+<div id="phenotypes" class="section level2">
+<h2>Phenotypes</h2>
+<p>Similar to the functions for summarizing Gene Ontology terms, two functions <code>makePhenotypes</code> and <code>makePhenotypeSearch</code> are included to organize GWAS-based trait associations and determine those phenotypes that are shared among candidate genes.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># summarize phenotypes</span>
+<span class="kw">makePhenotypes</span>(myMgl, <span class="dt">saveFile =</span> F) -&gt;<span class="st"> </span>myPhenotypes
+<span class="co">#</span>
+<span class="co"># output of makePhenotypes is a list with four elements</span>
+<span class="kw">class</span>(myPhenotypes)
+## [1] &quot;list&quot;
+<span class="kw">names</span>(myPhenotypes)
+## [1] &quot;phenRes&quot;   &quot;phenList&quot;  &quot;phenTable&quot; &quot;phenCount&quot;
+<span class="co">#</span>
+<span class="co"># phenRes is a list with GWAS-based trait associations for each gene split by datasource (NHGRI-EBI GWAS Catalog and GRASP)</span>
+myPhenotypes[[<span class="dv">1</span>]][[<span class="dv">5</span>]]
+## $GwasCatalog
+## [1] &quot;Mean corpuscular hemoglobin&quot; &quot;Mean corpuscular volume&quot;    
+## [3] &quot;Prostate cancer&quot;            
+## 
+## $GRASP
+##  [1] &quot;HDL cholesterol&quot;                                                              
+##  [2] &quot;Mean corpuscular hemoglobin (MCH)&quot;                                            
+##  [3] &quot;Mean corpuscular volume (MCV)&quot;                                                
+##  [4] &quot;Neuroblastoma (brain cancer)&quot;                                                 
+##  [5] &quot;Gene expression of TIMM23 [probe ILMN_22871] in osteoblasts treated with BMP2&quot;
+##  [6] &quot;TIMM23 gene expression in liver tissue&quot;                                       
+##  [7] &quot;Comorbid depressive syndrome and alcohol dependence&quot;                          
+##  [8] &quot;Mean corpuscular hemoglobin concentration (MCHC)&quot;                             
+##  [9] &quot;Infant head circumference&quot;                                                    
+## [10] &quot;Gene expression of NCOA4 in blood&quot;
+<span class="co">#</span>
+<span class="co"># phenList is a list with GWAS-based trait associations for each gene </span>
+myPhenotypes[[<span class="dv">2</span>]][[<span class="dv">4</span>]][<span class="dv">1</span>:<span class="dv">5</span>]
+## [1] &quot;Birth weight&quot;                                                                
+## [2] &quot;Carboplatin-induced neutropenia/leukopenia in cancer patients&quot;               
+## [3] &quot;Differential exon level expression of CTGLF5 [probe 3288865] in brain cortex&quot;
+## [4] &quot;Differential exon level expression of CTGLF5 [probe 3288879] in brain cortex&quot;
+## [5] &quot;Differential exon level expression of CTGLF5 [probe 3288880] in brain cortex&quot;
+<span class="co">#</span>
+<span class="co"># phenTable is a dataframe with phenotype and gene</span>
+myPhenotypes[[<span class="dv">3</span>]][<span class="dv">1</span>:<span class="dv">2</span>,]
+##      Phenotype         Gene           
+## [1,] &quot;Fasting insulin&quot; &quot;RP11-109G10.2&quot;
+## [2,] &quot;HDL cholesterol&quot; &quot;RP11-109G10.2&quot;
+<span class="co">#</span>
+<span class="co"># phenCount is a ranking of phenotypes and the number of genes they are assigned to</span>
+myPhenotypes[[<span class="dv">4</span>]][<span class="dv">1</span>:<span class="dv">2</span>]
+## 
+## HDL cholesterol Fasting insulin 
+##               4               3
+<span class="co">#</span>
+<span class="co"># to search for genes with a specific GO term</span>
+<span class="kw">makePhenotypeSearch</span>(myMgl, <span class="st">'Mean corpuscular hemoglobin'</span>, <span class="dt">phen =</span> myPhenotypes, <span class="dt">saveFile =</span> F)
+## [1] &quot;MSMB&quot;   &quot;NCOA4&quot;  &quot;TIMM23&quot;</code></pre></div>
+</div>
+<div id="snps" class="section level2">
+<h2>SNPs</h2>
+<p>Again similar to Gene Ontology terms and Phenotypes, two functions <code>makeSnps</code> and <code>makeSnpSearch</code> are included to organize genetic variants associated with candidate genes and determine those SNPs that are shared among candidate genes.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># summarize SNPs</span>
+<span class="kw">makeSnps</span>(myMgl, <span class="dt">saveFile =</span> F) -&gt;<span class="st"> </span>mySnps
+<span class="co">#</span>
+<span class="co"># output of makeSnps is a list with four elements</span>
+<span class="kw">class</span>(mySnps)
+## [1] &quot;list&quot;
+<span class="kw">names</span>(mySnps)
+## [1] &quot;snpRes&quot;   &quot;snpList&quot;  &quot;snpTable&quot; &quot;snpCount&quot;
+<span class="co">#</span>
+<span class="co"># snpRes is a list with SNPs for each gene split by datasource</span>
+mySnps[[<span class="dv">1</span>]][[<span class="dv">5</span>]]
+## $TranseQTL
+## [1] &quot;None&quot;
+## 
+## $CiseQTL
+##  [1] &quot;rs17720205&quot;             &quot;rs78937603&quot;            
+##  [3] &quot;rs11592181&quot;             &quot;rs11597667&quot;            
+##  [5] &quot;rs61847076&quot;             &quot;rs61847077&quot;            
+##  [7] &quot;10_51593069_GACA_G_b37&quot; &quot;rs10994675&quot;            
+##  [9] &quot;rs41306524&quot;             &quot;rs7085433&quot;             
+## [11] &quot;rs3122258&quot;              &quot;rs188856704&quot;           
+## [13] &quot;rs142782792&quot;            &quot;rs181655860&quot;           
+## [15] &quot;rs117979646&quot;            &quot;10_51507845_GA_G_b37&quot;  
+## [17] &quot;rs75901817&quot;             &quot;rs17720193&quot;            
+## [19] &quot;rs17776547&quot;             &quot;rs41306524&quot;            
+## [21] &quot;rs74877435&quot;             &quot;rs7085433&quot;             
+## 
+## $sqtlSeek
+## [1] &quot;None&quot;
+## 
+## $sqtlAltrans
+## [1] &quot;rs7085005&quot; &quot;rs2177370&quot;
+## 
+## $Ptv
+## [1] &quot;None&quot;
+## 
+## $GwasCatalog
+## [1] &quot;rs7085433&quot;  &quot;rs10993994&quot;
+## 
+## $GRASP
+## [1] &quot;rs7085433&quot; &quot;rs7350420&quot;
+## 
+## $DNAse
+## [1] &quot;None&quot;
+<span class="co">#</span>
+<span class="co"># snpList is a list with SNPs for each gene </span>
+mySnps[[<span class="dv">2</span>]][[<span class="dv">5</span>]]
+##  [1] &quot;10_51507845_GA_G_b37&quot;   &quot;10_51593069_GACA_G_b37&quot;
+##  [3] &quot;rs10993994&quot;             &quot;rs10994675&quot;            
+##  [5] &quot;rs11592181&quot;             &quot;rs11597667&quot;            
+##  [7] &quot;rs117979646&quot;            &quot;rs142782792&quot;           
+##  [9] &quot;rs17720193&quot;             &quot;rs17720205&quot;            
+## [11] &quot;rs17776547&quot;             &quot;rs181655860&quot;           
+## [13] &quot;rs188856704&quot;            &quot;rs2177370&quot;             
+## [15] &quot;rs3122258&quot;              &quot;rs41306524&quot;            
+## [17] &quot;rs61847076&quot;             &quot;rs61847077&quot;            
+## [19] &quot;rs7085005&quot;              &quot;rs7085433&quot;             
+## [21] &quot;rs7350420&quot;              &quot;rs74877435&quot;            
+## [23] &quot;rs75901817&quot;             &quot;rs78937603&quot;
+<span class="co">#</span>
+<span class="co"># snpTable is a dataframe with SNP and gene</span>
+mySnps[[<span class="dv">3</span>]][<span class="dv">1</span>:<span class="dv">3</span>,]
+##      SNP         Gene           
+## [1,] &quot;rs2611504&quot; &quot;RP11-109G10.2&quot;
+## [2,] &quot;rs4581397&quot; &quot;RP11-109G10.2&quot;
+## [3,] &quot;rs4630240&quot; &quot;RP11-109G10.2&quot;
+<span class="co">#</span>
+<span class="co"># snpCount is a ranking of SNPs and the number of genes they are assigned to</span>
+mySnps[[<span class="dv">4</span>]][<span class="dv">1</span>:<span class="dv">3</span>]
+## 
+## rs2611504 rs4581397 rs4630240 
+##         3         3         3
+<span class="co">#</span>
+<span class="co"># to search for genes with a specific SNP</span>
+<span class="kw">makeSnpSearch</span>(myMgl, <span class="st">'rs2611504'</span>, <span class="dt">snp =</span> mySnps, <span class="dt">saveFile =</span> F)
+## [1] &quot;RP11-109G10.2&quot; &quot;MSMB&quot;          &quot;NCOA4&quot;</code></pre></div>
+</div>
+<div id="overlap" class="section level2">
+<h2>Overlap</h2>
+<p>Two functions <code>makeOverlap</code> and <code>makeOverlapTable</code> have been developed to identify SNPs that are assigned to a given gene for multiple reasons, e.g. as both a cis-eQTL and a GWAS based variant. <code>makeOverlap</code> identifies overlapping SNPs for two user-defined groups, while <code>makeOverlapTable</code> gives the details for these SNPs.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># find SNPs that are both cis-eQTLs and GWAS-based variants</span>
+<span class="kw">makeOverlap</span>(myMgl, <span class="dt">snpsA =</span> <span class="st">'cisEqtls'</span>, <span class="dt">snpsB =</span> <span class="st">'gwasCatalog'</span>, <span class="dt">saveFile =</span> <span class="ot">FALSE</span>) -&gt;<span class="st"> </span>myOverlap
+<span class="co">#</span>
+myOverlap
+## $overlap
+## $overlap$`RP11-109G10.2`
+## [1] &quot;None&quot;
+## 
+## $overlap$`RP11-481A12.2`
+## [1] &quot;None&quot;
+## 
+## $overlap$MSMB
+## [1] &quot;rs10993994&quot; &quot;rs3123078&quot;  &quot;rs4631830&quot; 
+## 
+## $overlap$NCOA4
+## [1] &quot;None&quot;
+## 
+## $overlap$TIMM23
+## [1] &quot;rs7085433&quot;
+## 
+## 
+## $snpsA
+## [1] &quot;cisEqtls&quot;
+## 
+## $snpsB
+## [1] &quot;gwasCatalog&quot;
+<span class="co"># get details for these SNPs</span>
+<span class="kw">makeOverlapTable</span>(myMgl, myOverlap, <span class="dt">saveFile =</span> <span class="ot">FALSE</span>) -&gt;<span class="st"> </span>myOverlapTable
+<span class="co">#[[gene]][[snp]][[datasource]]</span>
+myOverlapTable[[<span class="dv">1</span>]][[<span class="dv">1</span>]][[<span class="dv">1</span>]][,<span class="dv">1</span>:<span class="dv">3</span>]
+##                            tissue          variant_id           gene_id
+## 1                            Lung 10_51549496_T_C_b37 ENSG00000138294.9
+## 2 Skin_Not_Sun_Exposed_Suprapubic 10_51549496_T_C_b37 ENSG00000138294.9
+## 3      Skin_Sun_Exposed_Lower_leg 10_51549496_T_C_b37 ENSG00000138294.9
+## 4                         Stomach 10_51549496_T_C_b37 ENSG00000138294.9
+myOverlapTable[[<span class="dv">1</span>]][[<span class="dv">1</span>]][[<span class="dv">2</span>]][,<span class="dv">1</span>:<span class="dv">3</span>]
+##    DATE.ADDED.TO.CATALOG PUBMEDID  FIRST.AUTHOR
+## 1             2008-06-16 18264097      Eeles RA
+## 2             2008-06-16 18264096      Thomas G
+## 3             2011-07-30 21743057 Schumacher FR
+## 4             2010-09-11 20676098      Takata R
+## 5             2011-01-13 21160077 Gudmundsson J
+## 6             2013-03-22 23269536         Sun J
+## 7             2013-09-18 23555189        Chen Z
+## 8             2014-11-09 24740154      Lange EM
+## 9             2014-11-07 24753544      Knipe DW
+## 10            2016-06-13 26443449        Wang M
+## 11            2016-02-12 25939597     Berndt SI
+## 12            2016-07-15 26034056   Hoffmann TJ
+## 13            2016-07-15 26034056   Hoffmann TJ</code></pre></div>
+</div>
+<div id="co-expression" class="section level2">
+<h2>Co-expression</h2>
+<p>Two functions <code>makeCoXpGene</code> and <code>makeCoXpTranscript</code> are included to test co-expression between gene or transcript pairs in specific tissues. For each pair of genes or transcripts in the specified tissues, co-expression is tested using cor.test. Two flags <code>makePlot</code> and <code>saveFile</code> can be used to save a pdf with corresponding plots and/or a csv with the results of cor.test. The plot includes expression of one gene on the x-axis and the other gene on the y-axis with results of the cor.test as part of the figure legend. The csv includes the cor.test output for all combinations of genes or transcripts in the specified tissues.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># plot co-expressions between genes using count normalized data</span>
+<span class="kw">makeCoXpGene</span>(myMgl, <span class="dt">gene =</span> <span class="kw">c</span>(<span class="st">&quot;RP11-109G10.2&quot;</span>, <span class="st">&quot;NCOA4&quot;</span>), <span class="dt">makePlot =</span> <span class="ot">FALSE</span>, <span class="dt">saveFile =</span> <span class="ot">FALSE</span>, <span class="dt">data =</span> <span class="dv">7</span>, <span class="dt">tissue =</span> <span class="kw">c</span>(<span class="st">'Prostate'</span>))
+## $`RP11-109G10.2|NCOA4`
+## $`RP11-109G10.2|NCOA4`$Prostate
+## 
+##  Pearson's product-moment correlation
+## 
+## data:  g1 and g2
+## t = 7.0002, df = 85, p-value = 5.546e-10
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.4515997 0.7232408
+## sample estimates:
+##       cor 
+## 0.6047216</code></pre></div>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAkAAAAGACAYAAABFmt0fAAAEDWlDQ1BJQ0MgUHJvZmlsZQAAOI2NVV1oHFUUPrtzZyMkzlNsNIV0qD8NJQ2TVjShtLp/3d02bpZJNtoi6GT27s6Yyc44M7v9oU9FUHwx6psUxL+3gCAo9Q/bPrQvlQol2tQgKD60+INQ6Ium65k7M5lpurHeZe58853vnnvuuWfvBei5qliWkRQBFpquLRcy4nOHj4g9K5CEh6AXBqFXUR0rXalMAjZPC3e1W99Dwntf2dXd/p+tt0YdFSBxH2Kz5qgLiI8B8KdVy3YBevqRHz/qWh72Yui3MUDEL3q44WPXw3M+fo1pZuQs4tOIBVVTaoiXEI/MxfhGDPsxsNZfoE1q66ro5aJim3XdoLFw72H+n23BaIXzbcOnz5mfPoTvYVz7KzUl5+FRxEuqkp9G/Ajia219thzg25abkRE/BpDc3pqvphHvRFys2weqvp+krbWKIX7nhDbzLOItiM8358pTwdirqpPFnMF2xLc1WvLyOwTAibpbmvHHcvttU57y5+XqNZrLe3lE/Pq8eUj2fXKfOe3pfOjzhJYtB/yll5SDFcSDiH+hRkH25+L+sdxKEAMZahrlSX8ukqMOWy/jXW2m6M9LDBc31B9LFuv6gVKg/0Szi3KAr1kGq1GMjU/aLbnq6/lRxc4XfJ98hTargX++DbMJBSiYMIe9Ck1YAxFkKEAG3xbYaKmDDgYyFK0UGYpfoWYXG+fAPPI6tJnNwb7ClP7IyF+D+bjOtCpkhz6CFrIa/I6sFtNl8auFXGMTP34sNwI/JhkgEtmDz14ySfaRcTIBInmKPE32kxyyE2Tv+thKbEVePDfW/byMM1Kmm0XdObS7oGD/MypMXFPXrCwOtoYjyyn7BV29/MZfsVzpLDdRtuIZnbpXzvlf+ev8MvYr/Gqk4H/kV/G3csdazLuyTMPsbFhzd1UabQbjFvDRmcWJxR3zcfHkVw9GfpbJmeev9F08WW8uDkaslwX6avlWGU6NRKz0g/SHtCy9J30o/ca9zX3Kfc19zn3BXQKRO8ud477hLnAfc1/G9mrzGlrfexZ5GLdn6ZZrrEohI2wVHhZywjbhUWEy8icMCGNCUdiBlq3r+xafL549HQ5jH+an+1y+LlYBifuxAvRN/lVVVOlwlCkdVm9NOL5BE4wkQ2SMlDZU97hX86EilU/lUmkQUztTE6mx1EEPh7OmdqBtAvv8HdWpbrJS6tJj3n0CWdM6busNzRV3S9KTYhqvNiqWmuroiKgYhshMjmhTh9ptWhsF7970j/SbMrsPE1suR5z7DMC+P/Hs+y7ijrQAlhyAgccjbhjPygfeBTjzhNqy28EdkUh8C+DU9+z2v/oyeH791OncxHOs5y2AtTc7nb/f73TWPkD/qwBnjX8BoJ98VVBg/m8AAEAASURBVHgB7J0FmBxV1oYvvossiy22uLsFd5cE9+C7aLCQxd0dggcLBAiQ4JoN7iQQZIEQHILbIsF/rP7znt1bW93TPd0z093T8p3nmemSW7fu/aq76tSR74yXmASJEBACQkAICAEhIARaCIHxW2iumqoQEAJCQAgIASEgBBwBKUD6IggBISAEhIAQEAIth4AUoJa75JqwEBACQkAICAEhIAVI3wEhIASEgBAQAkKg5RCQAtRyl1wTFgJCQAgIASEgBKQA6TsgBISAEBACQkAItBwCUoBa7pJrwkJACAgBISAEhIAUIH0HhIAQEAJCQAgIgZZDQApQy11yTVgICAEhIASEgBCYUBAIASFQvwjccsstgb8XXnghfPjhh2HuuecOSy65ZDjiiCPCLLPM0umBf/HFF2HLLbcs63jO/+c//7msts3Y6NNPPw3bbrutT22HHXYIu+yyS8NM85lnngnHHHNM4HPyyScPyy+/fBg8eHDDjF8DFQLVREAKUDXRVd9CoJMIjBs3LvTp0ydcd911OT2MGjUq8HfttdeGgQMHhq222ipnf7kr//d//xceeuihspr//PPPZbVr1kY//fRTitWKK67YMNP89ttvwzrrrBO++uorH/Nnn30W5phjjoYZvwYqBKqNgBSgaiOs/oVAJxDYY489wtChQ/3IueaaK2yxxRbhD3/4g1uDXnrppfDdd9+5gsQDrqvWGfpfb731io7yj3/8Y9F9rbBj0kknDRtttJFPdYEFFmiYKb/++uup8oPV6uSTTw4q/dgwl08DrQEC46kYag1Q1imEQAcQeOyxx8Iqq6ziR6y00kph2LBhYYoppkh72HnnncNVV13l6wcddFA4/fTT033Zhc8//zyMP/74YZpppslu9uWPPvoozDzzzL6McnXjjTe2aVPpDVggUKaycyl2DixgjD2/LQ/wd999N/zlL38J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2pZ4pfXXX9+VmTnnnNPjidZee+3w+uuvp23iwpAhQwLWJ+KM5p9/fi9COtNMM4XzzjsvNgmbb755jvVn0UUXdSUvNnj11VfDSiutFCgcOt988wXOSX8777xz+Omnn7xZqT5wBx5wwAHuWkPRA0OqxFMRXiIEhECNELA3EIkQEAJCIEXAHuSJ3X7879dff/Xtb775Zrpt3nnn9WVTgBKzxqTbDz744LSPQgvm3krbbrHFFjlNTHFIll9++XT/qFGjfP9aa62Vnsvccel+U8J8/7BhwxILok63x3HzaVXWk0cffTQ9jwV0J7EPxr7iiismprj4sWx/8MEHve0GG2zQpj9TdnyfKYTJMsssk+435SkHgx133LFkHzRYc8010z5M+Un7mHDCCZN7773X+9A/ISAEqouALEA1UjR1GiHQLAhgDbr77rvDZ5995i4rUzR8aqaMlD3F0aNHhyOPPDIceuihYe+99w64xKL1A5fUYostltPX559/HkxBCqYcBLLU1l133fD+++8HLEM///xzmGWWWcKVV14ZPv3003Daaae51ejHH38Mf//73wOfyA033OBB3Vh8aPf444+7G2y11VbzeCRcb8hll13mcUi+Yv+IT3r++ed9lWNwfeH2MoXJY5a++uord7vR4KGHHvJ27fXBOB544AFv17dvX3ejvfHGGwFLkymc4bDDDvN9+icEhECVEaiufqXehYAQaDQESlmAttlmm5wpYUmx21Qy/fTT52zPX8lagGhf6O8Pf/hDYkpGemi0ANE2WoXiziuuuCLto3///nGzf2KJif2bi8y3WYp9um2ppZZKjjvuOD9XtHJlOzj22GPTtqacZHf5sild/mmuLO9jySWX9PZYc6IU62Prrbf2thanlJgSGZsn5557bnpOU8bS7VoQAkKgOggoCNrukhIhIATKR2D22WfPaUwsDEJcS7lCWjn9kGUGD9BUU03lMTB9+vRJrSnZvsw15Puz2x5++OF0deONN06XWWCddHqENHYsRrvvvnsYNGhQwJr07LPP+h+xTPD89O7dOxx99NEe1+QHtfOPTLXBgwcHLF5PPfVUzrztNt3Okf/ZhbUHIZh79dVX/89G+08geBSsWwsssEBc1acQEAJVQEAKUBVAVZdCoJkRMCtNzvRKZVzlNP7vCkHKN954Y6FdBbcRkI0SlJXoemNb/hhQrPJl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EOthveGeuPjii4devXq1C8cOO+wQYNrnQY9QmBPByi75DwLzzDOPoBACVUOgpAUI9s6BAwe6n/qTTz5xnzUxQZAcHXfccWGPPfZwd1jVRqiOhYAQEAJlIMB96YgjjvCAYpQQslerLXfddVfYZZddXPnhXATuXnDBBWHo0KElT007LECEE8w222zh559/zqlWXrIDNRACQqBLCJS0ANH7lltuGTbeeGOnK59gggkCKYn33XdfWGqppcKcc87ZpQHoYCEgBIRAJRBYe+213VWC24Tq36uvvnq49dZb/d5Vif4L9UFs5Jtvvpmzi1igGB6QsyNvBQJAyjK88cYbTgiINYj0cIkQEAK1QaAsBYihTDzxxOmIyFhAKZIIASEgBOoBAbJUH3zwQc9URYkgVhEL0J577llVBYjQgFNPPdUt4XvvvbcT+w0ZMiR88803ZcPS6m4ePAv7779/4HPdddf1Ku1lg6eGQqALCJStAOGnHjlypL+p5J+vlK87v73WhYAQEAKVROCnn37yquJZC8pMM81U9YwqXgxfffXVQNr21ltv7cR9EPhRK1BSGoHvv//eY55QgIiJoljpP//5zw7Voix9FrUQAoURKEsB2nzzzcOdd95ZNDuh2cm7CkOnrUJACNQLAriPoOnYbrvtwrXXXuvZVMQncu+qtqAEkRDSLAKzP6SMhDrMOuus4ZJLLsnxAFRynrvttpsrj6T/I8RxEQ919913h549e1byVOpLCLRBoKTDedSoUa78XHnllU6G+OGHH4b8vza9aoMQEAJCoIYIwBeDCwxmZQKgscCQnXrppZfWcBSNfypeZkk3J6uNgtjEN00yySQdcul1BIUvv/wyJ5yCgPCll146wKskEQLVRqCkAsRbAIycvFkR8IxZOf+v2oNU/0JACNQXAryxL7TQQn4vIJupHoQMLKqLowg9//zzXm6BB6qkfARQGGH5J5CboPLHHnvMLTTHH398+Z10oCX1wf7+97+75YfD/vWvf4VbbrklpQToQFdqKgQ6jEBJBWi11VZzMipqgkmEgBAQAoccckhAAaKSN/Eap512mlfurgdkyFJdZJFFQqsHFhe6FljuyTiLBa0LtcEiQ1p/VmCqZns15IADDghLLrmkZxgTS9qjR49w++23K7u4GmCrzzYIjGcmz6TN1rwNuL8OP/xwD1DDPJn/VrXrrrvmHdH8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ASEgBJofgYJB0FNOOWUYN25cydnjfiLIGM6HWgl+5gcffNBZqbPnJAsBRQwiOsgbJf9BAKuPpDgCKIaQfFIBHfJPUnpxAVP7TiIEhIAQEALNi0BBBQgq8zPOOCO89dZbaQHUQhBQJJH4m1rWfCG4efvtt3drDxlqWKGiXHHFFa4ArbrqqmGaaabxavZxX7mfWJieeeaZks1//fVXDwwv2VAN6hqBHXbYIVDHaKGFFvJxkr6Le5cq77wISISAEBACQqA5ESioAG244YZh7rnnDjwcSHvH6pIvvDmff/75gZicWgqZTFTcxuIzxRRT5ChABGrjziB7jWKOSy65ZIeHRpbU9ddfX9ZxuJkkjY0A35kslQNWIEQsto19XTV6ISAEhEApBMYzLp2kUCMqW6+55poBS8e2224bILjC1YWFBBfUI488EuCaOeSQQwodXvVtP/30k7NQFyPbgrjx008/9Sr21RgM6fdnn322p+FXo3/1WRsEIIjEZQptAIJF87HHHgtFfhbeRv+EgBAQAkKgfQTwJEFZw2e9SkELEIPFeoKl5dBDD3UG4a+//trnQKVraoFdd911rhh118TgACqm/DCmZZddtruGpvM2EALQPGABIpieul5/+tOfyop/a6ApaqhCQAgIASFQAIGiChBtp5tuOs8cInuIOi/8zT///CknUIH+um0TVbk333zzgGuOjB6JECgHAeLX/v3vf4eXXnrJGc8XWWSRINdmOcipjRAQAkKgsRFoVwHKTg33Vy2zvbLnLmcZl9jLL78cfvjhh3Kaq40QyEEAxUciBISAEBACrYNAu1G8FLUrFOQM387pp58uZaN1vieaqRAQAkJACAiBpkKgqAJEyYmFF17YWYTzA0IpsEnw82qrrRa++OKLpgJEk/kfAhTBPfLII72I6iyzzBJGjBjxv51aEgJCQAgIASHQwAgUVIA++ugjz54iFX7kyJFtKq7Dk0MK/CuvvOIPyHqYPwHRMELPOuus9TCcphgDWYDQDdx5551eE26FFVYI99xzT1PMTZMQAkJACAiB1kagYAzQtdde6+nvt9xyS/jzn//cBiEKou6zzz4ecwP5IMpQLJbapnGNNkw//fRewLVGp2v607z66qteb+23337zoGAK4t51112hX79+ft2bHgBNUAgIASEgBJoagYIWoDfffDPwtl9I+cmiASnhzz//nHKoZPdpubERoHo83E/ZjKjZZpvNy0Q09sw0eiEgBISAEBACIRRUgGaffXZPeS8FELFBWINmnHHGUk21v8EQoDQEys/ee+/tI+daUzNrk002abCZaLhCQAgIASEgBNoiUFABIrgZF0hkx2172H+2DB8+PPTo0cOLSBZro+2NicDEE0/sLrCLLrrIS6FQF2uuueYKrEuEgBAQAkJACDQ6AgUVIJQasn622Wab8M477xSc44ABA0L//v3DWmutVXC/NjY+AgSW4+IkCHrUqFFOaw5jskQICAEhIASEQKMjUDAIGrcW9ZHIAqLa+kYbbRQWXHBBLz5K5hcVs5988kkvOnrUUUc1OgYafzsI8F1Yaqml2mmhXUJACAgBISAEGg+BggoQ0yAOCCXomGOOcf4XSkwQB4IrBKWI7K9ddtml8WZcoRFTLfyhhx4Kzz77bIV6rE43FLO95ppr3H1VnTOo13wE+G5QiFeUDPnIVG/9+++/9xpuM800U/VOop5zEKA+JPeXaaedNme7VqqHAGV75phjDn8GV+8slen5yy+/rExHVeylqALEOSkSefnll/vpx40b56SHgC83SPBYmEGDBnV7+n+p7wYuLCx2fEpqgwBlWd5///3AQ1lSGwS+/fZbz1DkPiWpDQKQ4HJfURJMbfDmLB9//HH4/PPPwx//+MfanbSTZ9p///2dTLmTh9fksPHMqpPkn+mDDz4Ib7/9dv7mouurrLJK0X3a0b0IkM4+zTTTqGxJDS8DNemgiBg9enQNz9rap4KjirI9xKtJaoPAeeedF956661w7rnn1uaEOks44IADnJm/b9++QqMCCBS0AA0dOjQceOCBZXdfQIcq+1g1FAJCQAgIASEgBIRArREoqABtt912oT2rDkSJMAJ/8sknoXfv3rUes84nBISAEBACQkAICIEuIVBQASL9mb98wdJz4YUXeiHUKaaYItx6660ixssHSetCQAgIASEgBIRA3SNQkAeo0KiJCVp99dXDvvvuGzbeeGOvByVW4EJIaZsQEAJCQAgIASFQ7wiUVICi1YdimHAA3XzzzeG6667zwNp6n5zGJwSEgBAQAkJACAiBQgi0qwBRCgMyRCq/9+rVK4wZMyZsttlmhfrRNiEgBISAEBACQkAINAwCBRUgrD6UulhkkUXc1XXTTTeFIUOGyOrTMJdVAxUCQkAICAEhIATaQ6BgEDTKT6wCThmE66+/3v+KdYSCJBECQkAICAEhIASEQKMgUJAIkRif888/v+w5jBgxouy2alhbBLDmQcy38MIL1/bELXw2SmG8++67Yd55521hFGo7dZigYSamhI+kNgiAN991lR+pDd6cBSZo6jOq/EhlMC+oAFWma/UiBISAEBACQkAICIH6RKBgDFB9DlWjEgJCQAgIASEgBIRAZRCQAlQZHNWLEBACQkAICAEh0EAISAFqoIuloQoBISAEhIAQEAKVQUAKUGVwVC9CQAgIASEgBIRAAyEgBaiBLpaGKgSEgBAQAkJACFQGASlAlcFRvQgBISAEhIAQEAINhIAUoAa6WBqqEBACQkAICAEhUBkEpABVBkf1IgSEgBAQAkJACDQQAlKAGuhiaahCQAgIASEgBIRAZRCQAlQZHNWLEBACQkAICAEh0EAISAFqoItViaH+/vvvlehGfXQAgZ9//jn89ttvHThCTTuDAHXvJLVFQN/t2uKt+3dl8ZYCVFk867K3MWPGhA022CD86U9/CpNOOmno0aNHuO++++pyrM02qHfeeceLRQ4fPrzZplYX8/nuu+/CIYccEuaZZ54w9dRTh80228yLotbF4Jp8EPpu1+4CX3/99V7QepJJJvHv+dZbbx0++OCD2g2gSc8kBahJL2yc1pdffhnWWWed8Omnn4aLL7443HHHHWGGGWYIPXv2DM8991xsps8qIMADYqONNtIDuQrYxi4PP/zwcPPNN4cBAwaE22+/Pbz99tthrbXWCrIGRYSq86nvdnVwLdTrXXfdFXr37u0vrvfff3847bTTwjPPPOMvtVjgJF1AwG4UkiZGYODAgfgFkqeffjqd5bhx45LJJ5882WeffdJtWqgsAhdddFEy2WSTJfPNN5/jbzexyp5AvSUvvvhiMv744ye33XZbioZZOx1vs7il27RQWQT03a4snqV6W2+99ZLZZ589MfdX2nTIkCH+PX/kkUfSbVroOAKyAHVBeWyEQ5dcckl/O1566aXT4eIKm3baaYMpQuk2LVQWgZNOOinsu+++YdiwYZXtWL2lCODGnXjiicP666+fbltggQXCvPPOG+6+++50mxYqi4C+25XFs1Rvu+22W7jkkkvCeOONlzadY445fFn38BSSTi1M2KmjdFDDILD44osH/rLy+OOPh7Fjx4aDDjoou1nLFUTg+eefD9NNN5389BXENL+rN9980zFGCcrKTDPN5C7f7DYtVw4Bfbcrh2U5PRHXli/XXnttmHDCCd0tlr9P6+UjIAtQ+Vg1Rctvv/027L333mH++ecPu+66a1PMqR4ngfIjqS4C33zzjQeE5p9lqqmmkgKUD0oF1/XdriCYnejqiSeecItQv379wowzztiJHnRIREAWoIhEg3/+8ssv4cMPP8yZxcwzzxwmmmiidBsPjF69eoX33nsvPPzww+4+SHdqocMIfP3114G/KGAN5pLaIADeFgPU5mS4ChQc2gYWbWgCBEaOHBk23HDDsNxyy4XjjjuuCWb0/+2dB5wURfbHCzFgxBxRMCuomBVFBFExi6J4plM8A+qJeJ5nTnhGDOdhOlRUMJx65ownKHrmMyMmzAqKiAmz1r++76z598x2z/Yus+zs7O99PrMzU11d/epbNV2v33vd27xdqHv2aF59dPRGEpg4caIjLpx8ESKIMnXqVNerVy/HLfHkTnTt2jVu0nsjCQwbNqyId0hWbGRL2q0xBLibcdq0aXV2pYw8N4kI1BKBMWPG2B2OpDRwZ1i7du1qqXvN0hd5gJoFe+UPiit0xIgRRQ2TC4FwKzy3Bn/22Wdu3LhxrnPnzkX19KVxBLjFvUOHDoWdCb1IZh4B5vyUKVPsIZNt27YtHHjy5MmuZ8+ehe/6IAItncDYsWPNe88jTcIdYDJ+KjSgMoAqBLK5m2nfvr0bMGBAHTV4cih3yXBVTPJzx44d69RRQeMI4EWTJ61x7CqxV+/evd306dMtnMtnhOcATZgwwQ0ZMqQSh1AbItDsBMaPH2/GT9++fd2oUaNc0thvduVauAIygFr4ANan/hVXXOHCM4DcwIED3ejRo4uq471I3kJctFFfRKDKCXTp0sXCuoMHD7aHIYbnLjluGe7evbvr169flWsv9UQgHwHmd3jCjevWrVsdL3+PHj1ceNZYvoZUqw4BGUB1kNRWwciRI61DPAW6VPr06SMDqBSKvrcoAlwR9+/f3xYBbgsmz2348OFFz0xpUR2SsiKQIDBp0iTH05+RQYMGJbb87yMXuDKA6mDJXdCGZyfmrq2KIiACIlCFBMhv444w/h+YRAREQATyEJABlIeS6oiACIiACIiACNQUAd0GX1PDqc6IgAiIgAiIgAjkISADKA8l1REBERABERABEagpAjKAamo41RkREAEREAEREIE8BGQA5aGkOiIgAiIgAiIgAjVFQAZQTQ2nOiMCIiACIiACIpCHgAygPJRURwREQAREQAREoKYIyACqqeFUZ0RABERABERABPIQkAGUh5LqiIAIiIAIiIAI1BQBGUA1NZzqjAiIgAiIgAiIQB4CMoDyUFIdERABERABERCBmiIgA6imhlOdEQEREAEREAERyENABlAeSqojAiIgAiIgAiJQUwRkANXUcKozIiACIiACIiACeQjIAMpDSXVEQAREQAREQARqioAMoJoaTnVGBERABERABEQgDwEZQHkoqY4IiIAIiIAIiEBNEZABVFPDqc6IgAiIgAiIgAjkISADKA8l1REBERABERABEagpAjKAamo41RkREAEREAEREIE8BGQA5aGkOiIgAiIgAiIgAjVFQAZQTQ2nOiMCIiACIiACIpCHgAygPJRURwREQAREQAREoKYIyACqqeFUZ0RABERABERABPIQkAGUh5LqiIAIiIAIiIAI1BQBGUA1NZzqTHMT+PHHH90vv/xSVo08ddIaoF32zRLvfdamQnmeOrHyZ5995qZOnRq/ln2vTzd2bsix48F+/fXX+DH3+6uvvtqoY+U+gCrONAJff/21e//992fa8XSg1kVABlDrGu9W29vLLrvMtWnTpug1yyyzuKWXXtptuummbvTo0QU2kyZNKqrHfrPNNptbZJFF3E477eSefvrpQt3kh3feecctueSS7v77708WF33OU6doh9++YAjssMMO7sADD6yz+fnnn3d77rmnW2CBBdxyyy3nTjvttDp17rzzTrf66qu7OeaYw3Xr1s0NGzasTh0KMB723Xdft9JKK1l/F154YbfEEku4o446KtP4KqfbN998444++mi34oorugUXXNDtvPPO9RpV06dPd3/+85+N5ayzzuo6duzozjjjDPfzzz+n6pwsvPfee+14jFkeQfdLL73Uff/993mqt6o6d9xxh/0OJk+ebP1m7q2zzjpNzqBt27aO3yuCYd27d2/3+eefN/lxdYDWR0AGUOsb81bd4+uvv9498MAD9mKxPOCAA+zkuu2227pHH320iM0+++zjRo0aZa/LL7/cjIAnnnjCbbXVVu7dd98tqothg4FSzmOSp05Ro799+eGHH9yhhx7q0LdUvv32W7fLLruYx2Ps2LHupJNOcmeddZY7/fTTC1UffPBBt+OOO7rFFlvM3X333WbEDRkypLDIxIr0aYsttnDPPvusO/HEE90LL7zgnnzySXfYYYe5iy66yG2++eaxauG9nG5UOu6449wtt9xiRgYL6ttvv23tlPMGHXLIIW7EiBHuj3/8o3v88cfdXnvt5U4++WR36qmnFo6b9gFjhuOdffbZaZtTy2666SbH8erz2qXu3MoKMZy32267mdrr+eef3+Z+cj7PVAV0sNomEE5EEhGoeQLhKp/4kP/www/r9PW9997z4arTDxo0yLZ9/PHHVvfiiy+uU/e5556zbUOHDi1su+SSS/zcc8/tV155ZdsWjIzCtvghT51YN/kejBHfuXNnHxYCv+iii/pglCU3+2AY+Pnmm89/9913hfJgKPjgufHBq2Fl3bt3t+8//fRToU4wknzwann6inz11Vc+eGk8dZNtxR3uuusu61swpmKRr0+3l156yQcvm7/99tsL+wQPk7UTvGSFsuSHL774wvYJHqdkse/Xr5/1v6iw5MtVV13l+/TpU1Ja/ut1111n+gRPVfmKrXAr48ZvJnhEZ2rvmTP8XqMEj6AP3k0fDPRYpHcRqAgBeYBq275V73IQIAy20EILOfIN6pNgjFg47K233ipU5eoUL0mahyZWylMn1k2+X3HFFW6ppZZyhLkIb5UK3qytt97atWvXrrAJbw/5O88884yVvfLKKxZ6IpwUhVBeMIjcI488YkWPPfaYe/PNN925555b1Fasz5U/XhhCYlHq0w3P0+yzz276xX1WXXVVC6/dc889sajoHU8MIamDDz64qHzZZZe18QlnvaLy+AVPFN4vQmxJwau1//77WzhttdVWc//85z/No4RHj7DgCSecYNWD4WeevrjvlVde6dZaay0377zzuvXXX9/qxm3BMHDrrruueRFjGZ4qyvBypQlhyeOPP94Fg8vaxbPBuKFfUvBC9ujRw7Vv397ChoQP6VsU9ERvvDHLL7+8u++++yzkST/wmq2xxhrWV7xnsMJzt8oqq7guXbq4888/PzZj73jj4NWpUyfrJ+Et9MsS5jDeOOTwww+3/tLn0lcwpq0O4U+8a7TPvOnbt68LFxu2Lf6h//vtt59bfPHFLbyWDEXHOnPNNZeFqRlfiQhUksD/nxEr2araEoEWROBvf/ub+/TTT90ee+xRr9aEkDAcyGmJgnFC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h0EWNuiDCMwgARlAMwhQu4uACFQPAfK5SCQmlwaD53e/+53d3o/3gQcR4uHBk8A/fZVUPwE8VNwBR64SCdcSEagkARlAlaSptkRABJqVQMh9cvyHd54mHMNW3FVEWIy73ribKhnmalZldfB6CZA8zb8C4V9vSESg0gRkAFWaqNoTAREQAREQARGoegK6Db7qh0gKioAIiIAIiIAIVJqADKBKE1V7IiACIiACIiACVU9ABlDVD5EUFAEREAEREAERqDQBGUCVJqr2REAEREAEREAEqp6ADKCqHyIpKAIiIAIiIAIiUGkCMoAqTVTtiYAIiIAIiIAIVD0BGUBVP0RSUAREQAREQAREoNIEZABVmqjaEwEREAEREAERqHoCMoCqfoikoAiIgAiIgAiIQKUJyACqNFG1JwIiIAIiIAIiUPUEZABV/RBJQREQAREQAREQgUoTkAFUaaJqTwREQAREQAREoOoJyACq+iGSgiIgAiIgAiIgApUmIAOo0kTVngiIgAiIgAiIQNUTkAFU9UMkBUVABERABERABCpNQAZQpYmqPREQAREQAREQgaonIAOo6odICoqACIiACIiACFSagAygShNVeyIgAiIgAiIgAlVPQAZQ1Q+RFBQBERABERABEag0ARlAlSaq9kRABERABERABKqegAygqh8iKSgCIiACIiACIlBpAjKAKk1U7YmACIiACIiACFQ9ARlAVT9EUlAEREAEREAERKDSBGQAVZqo2hMBERABERABEah6AjKAqn6IpKAIiIAIiIAIiEClCcgAqjRRtScCIiACIiACIlD1BGQAVf0QSUEREAEREAEREIFKE5ABVGmiak8EREAEREAERKDqCcgAqvohkoIiIAIiIAIiIAKVJjBrpRtUe81P4JhjjnFnn322m2+++ZpfGWkgAiIgAi2YwFdffeX+8pe/2Dm1BXdDqqcQkAGUAqWlFz377LPu3nvvdRtttFFL74r0FwEREIFmJfDEE0+4oUOHNqsOOnjTEJAB1DRcm7XVNm3auFlnndW1b9++WfXQwUVABESgpRPgXMo5VVJ7BJQDVHtjqh6JgAiIgAiIgAjUQ0AGUD2AtFkEREAEREAERKD2CMgAqr0xVY9EQAREQAREQATqISADqB5A2iwCIiACIiACIlB7BGQA1d6YqkciIAIiIAIiIAL1EJABVA8gbRYBERABERABEag9AjKAam9M1SMREAEREAEREIF6CMgAqgeQNv+PwK+//up+/vlne/3yyy9ViwUdm0uqmUtzMWmK4zZ0jBtavxp0bgodkm3ye65P8tSpr41KbUcX732lmitqp5r6WaSYvjQ5ARlATY64Ng5wzjnnuHnmmccttthibpFFFnELLLCA22uvvdz3339fNR185ZVX3IILLths+nTs2NF9+umnDT7+66+/7q6++uoG79dcOzS3vsy9+ubd9ddf715++WVDtPjii7svv/xypuNqCh2SbTamQzfccINbY4013LLLLutOPvnk1CY++OADt9lmm7muXbu6Xr16uVdffTW13swsPOCAA9yoUaMqekgMqoEDB7pVV13VLb/88m7cuHEVbV+NVT8BGUDVP0ZVo+GAAQPc1KlT3eeff+44Sb777rtu2LBhVaPfXHPN5eaee+6q0SevIg899JB74YUX8lZv9notQd/LL7/c8T+ckBdffLFZ/i9eU+iQbLOhE+Gjjz5yJ554orv//vvdc8895+655x736KOP1mnm8MMPd3vssYcZkIcccog75ZRT6tSphYIrr7zSffHFF44LJwzLvffe2zzctdA39SEfARlA+TipVgkBvEEbbrih++STT2wLXoEtt9zSrhq5spwyZYqVP/LII26TTTZxq6yyiuvWrZt76qmnrPy0005zJ510klthhRXcbbfd5s4//3y7EuOqM3lletNNN7mtttrKrkTxksQw09Zbb+3OPfdc17lzZ7fBBhu4559/3nXq1Mltv/321v6TTz5p5auttprbeeedC3raxt/+9OnTx3TgmH379nUff/xxqm6cIPfff3+39tprW/3Jkydbve+++87tu+++pveBBx7ofvrpJys/9dRTbXH57TCmP0YjcuONNxq3jTfe2F166aV2TPp+8803u4suuijuUnjfZptt3JlnnmnH4PMzzzzjevbs6dZdd93CMb755hs3ZMgQt/7665tXjr4jTz/9tBs8eLDbZZdd3EorrWR1YLj66qu7HXfcsdDfrLE7/fTT3XnnnWfjtuKKK5p+MCqnb2n/0CNLv9I5UPo9Sy/aRLiCP+OMM9w666zj0G+33XZzX3/9tbv22mttPrB4jx8/3ha26dOnZ+oBpyOOOML2Zz6y+H/77bf/O0jib5Y+aXMtSweY8o+K+S3giXnwwQcd3g3m8XHH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" /><!-- --></p>
+</div>
+<div id="dnase-hypersensitivity-sites" class="section level2">
+<h2>DNAse hypersensitivity sites</h2>
+<p>To show only those results from Maurano et. al that are significant</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># filter DNAse results for significant p-values</span>
+<span class="kw">makeDnaseSig</span>(myMgl) -&gt;<span class="st"> </span>results
+<span class="co">#</span>
+results
+## $`RP11-109G10.2`
+## character(0)
+## 
+## $`RP11-481A12.2`
+## character(0)
+## 
+## $MSMB
+## [1] &quot;rs7904463&quot;  &quot;rs17178655&quot;
+## 
+## $NCOA4
+## character(0)
+## 
+## $TIMM23
+## character(0)</code></pre></div>
+</div>
+<div id="allelic-ratios" class="section level2">
+<h2>Allelic ratios</h2>
+<p>Allelic ratios can be plotted for one gene at a time using <code>makeAeiPlot</code>. A single pdf entitle ‘AeiPlot_<em>gene</em>.pdf’ will be generated with each individual as a separate page in the document. Tissues are displayed on the x-axis and allelic ratios on the y-axis. Each do represents an individual SNP. Dot colors correspond to the SNP (identified by its position), while dot shapes correspond to the class of SNP - intron, exon, etc. The results used to generate the plot can be saved in an csv file using the ‘saveFile’ flag.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># plot allelic ratios</span>
+<span class="kw">makeAeiPlot</span>(myMgl, <span class="dt">gene =</span> <span class="kw">c</span>(<span class="st">'NCOA4'</span>), <span class="dt">saveFile =</span> <span class="ot">FALSE</span>) -&gt;<span class="st"> </span>myAeiPlot</code></pre></div>
+</div>
+<div id="multieqtl" class="section level2">
+<h2>MultiEqtl</h2>
+<p>The function <code>makeMultiEqtl</code> was designed to identify eQTL variants that serve as eQTLs for multiple candidate genes. The search can be done in a tissue-specific fashion by specifying a particular tissue using the <code>tissue</code> flag or irrespective of tissue by using <code>tissue = 'All'</code>. There are two optional flags <code>makePlot</code> and <code>saveFile</code> that will generate, respectively, either a pdf or a csv summarizing the results.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># if there are no MultiEqtls in a given tissue an error message appears </span>
+<span class="kw">makeMultiEqtl</span>(myMgl, <span class="dt">makePlot =</span> <span class="ot">FALSE</span>, <span class="dt">saveFile =</span> <span class="ot">FALSE</span>, <span class="dt">cis =</span> <span class="ot">TRUE</span>, <span class="dt">trans =</span> <span class="ot">TRUE</span>, <span class="dt">tissue =</span> <span class="kw">c</span>(<span class="st">'All'</span>, <span class="st">'Prostate'</span>)) -&gt;<span class="st"> </span>myMultiEqtl
+<span class="co">#</span>
+<span class="co"># summarize MultiEqtls</span>
+<span class="kw">makeMultiEqtl</span>(myMgl, <span class="dt">makePlot =</span> <span class="ot">FALSE</span>, <span class="dt">saveFile =</span> <span class="ot">FALSE</span>, <span class="dt">cis =</span> <span class="ot">TRUE</span>, <span class="dt">trans =</span> <span class="ot">TRUE</span>, <span class="dt">tissue =</span> <span class="kw">c</span>(<span class="st">'All'</span>)) -&gt;<span class="st"> </span>myMultiEqtl
+<span class="co">#</span>
+<span class="co"># output of makeMultiEqtl is a list with four elements</span>
+<span class="co"># note in the event of multiple tissues the output is a list with length corresponding to the number tissues where each element is a list with four elements as described below</span>
+<span class="kw">class</span>(myMultiEqtl)
+## [1] &quot;list&quot;
+<span class="kw">names</span>(myMultiEqtl)
+## [1] &quot;fullTable&quot;  &quot;ranking&quot;    &quot;topSnps&quot;    &quot;topSummary&quot;
+<span class="co">#</span>
+<span class="co"># fullTable is a dataframe where each row is an eQTL</span>
+myMultiEqtl[[<span class="dv">1</span>]][<span class="dv">1</span>:<span class="dv">3</span>,]
+##              V1       V2        V3  V4
+## 1 RP11-109G10.2 Prostate rs2611504 cis
+## 2 RP11-109G10.2 Prostate rs4630240 cis
+## 3          MSMB     Lung rs2611504 cis
+<span class="co">#</span>
+<span class="co"># ranking is a list of tables ranking the number of genes each eQTL is assigned to  </span>
+myMultiEqtl[[<span class="dv">2</span>]][[<span class="dv">1</span>]][<span class="dv">1</span>:<span class="dv">3</span>]
+## 
+##              rs2611504              rs4630240 10_51501963_AGTT_A_b37 
+##                      3                      3                      2
+<span class="co">#</span>
+<span class="co"># topSnps is a list of vectors of eQTLs appearing for the maximum number of genes (i.e. if the most number of genes an eQTL applies to is 3 all eQTLs assinged to 3 genes will be displayed)</span>
+myMultiEqtl[[<span class="dv">3</span>]]
+## [[1]]
+## 
+## rs2611504 rs4630240 
+##         3         3
+<span class="co">#</span>
+<span class="co"># topSummary shows the information from fullTable (gene, tissue, snp) for those snps included in topSnps</span>
+myMultiEqtl[[<span class="dv">4</span>]]
+## [[1]]
+##                V1                              V2        V3  V4
+## 1   RP11-109G10.2                        Prostate rs2611504 cis
+## 3            MSMB                            Lung rs2611504 cis
+## 81           MSMB Skin_Not_Sun_Exposed_Suprapubic rs2611504 cis
+## 207          MSMB      Skin_Sun_Exposed_Lower_leg rs2611504 cis
+## 368          MSMB                         Stomach rs2611504 cis
+## 545         NCOA4                     Whole_Blood rs2611504 cis
+## 2   RP11-109G10.2                        Prostate rs4630240 cis
+## 4            MSMB                            Lung rs4630240 cis
+## 399          MSMB                         Stomach rs4630240 cis
+## 575         NCOA4                     Whole_Blood rs4630240 cis</code></pre></div>
+<div id="summary" class="section level3">
+<h3>Summary</h3>
+<p>The function <code>makeSummary</code> was designed to give a quick overview of the number of SNPs identified for each candidate gene. Of particular interest maybe those genes with molecular-based SNPs (e.g eQTLs) that do not have GWAS hits and vice versa.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># summarize associated SNPs</span>
+<span class="kw">makeSummary</span>(myMgl, <span class="dt">saveFile =</span> F) -&gt;<span class="st"> </span>summary
+<span class="co">#</span>
+summary
+##               DNAse TranseQTL CiseQTL sqtlSeek sqtlAltrans Ptv GwasCatalog
+## RP11-109G10.2 0     0         2       0        0           0   0          
+## RP11-481A12.2 0     0         1       0        0           0   0          
+## MSMB          2     0         454     0        0           0   5          
+## NCOA4         0     0         163     0        6           6   4          
+## TIMM23        0     0         22      0        2           0   2          
+##               GRASP
+## RP11-109G10.2 2    
+## RP11-481A12.2 0    
+## MSMB          9    
+## NCOA4         11   
+## TIMM23        2</code></pre></div>
+</div>
+</div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,28 @@
+Package: mglR
+Title: Master Gene List: An R Package to Integrate Genomic Data for Candidate Genes
+Version: 0.0.0.9000
+Authors@R: person("Katherine", "Hartmann", email = "klh64@cornell.edu", role = c("aut", "cre"))
+Description: Tools to download and organize large-scale, publicly available genomic studies on a candidate gene scale. Includes functions to integrate these data sources and compare features across candidate genes.
+Depends:
+    R (>= 3.3.0),
+    biomaRt
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 5.0.1.9000
+Imports:
+    stringr,
+    grDevices,
+    graphics,
+    stats,
+    utils,
+    gplots,
+    ggplot2,
+    grasp2db,
+    dplyr,
+    magrittr,
+    gdata
+Suggests:
+    knitr,
+    rmarkdown,
+VignetteBuilder: knitr

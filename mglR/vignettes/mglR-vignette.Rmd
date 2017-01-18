@@ -1,0 +1,543 @@
+---
+title: "mglR: an **R** package to integrate genomic data for candidate genes"
+author: "Katherine Hartmann"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+The package **mglR** standing for "Master Gene List" was developed to download and organize large-scale, publicly available genomic studies on a candidate gene scale. It also includes functions to integrate these datasources and compare features across candidate genes. 
+
+---
+
+This package makes use of the list structure in 'R' to organize datasources in an identical fashion for each gene of interest.  It is building a nested list from which data can be pulled in a very systematic way.  Practically speaking, the package can be divided into two components: 
+
+* *1: building the list structure.*  These are functions assigned to the family *elements* and all begin with *add*.  These functions download and organize various datasources.
+
+* *2: integrating datasources across candidate genes.*  These are functions assigned to the family *output* and all begin with *make*.  These functions reflect some simple questions that maybe of general interest.  For example: Are two genes co-expressed?  Do any genes have the same traits assigned by GWAS?  Are any SNPs assigned to a given gene both because they appear as an eQTL and a GWAS hit?
+
+
+The first section of this vignette covers how to build the list structure, the second discusses some pecularities of the list structure, and the third presents the functions introduced to integrate these datasources.  A separate vignette "Building on mglR" presents some ideas about how this package may be expanded by the user to include additional datasources or functions to accomodate their specific interests.
+
+This package relies on several packages that have been developed by others to handle many of these datasources.  Perhaps the most valuable, and the only one that is truly essential, is *biomaRt*.  Although *biomaRt* does a phenomenal job in facilitating navigation between gene names, postions, etc. in a way that is critical for this package, it at times will throw error messages "Request to BioMart web service failed. Verify if you are still connected to the internet.  Alternatively the BioMart web service is temporarily down.".  If this occurs please try the function again. 
+
+Also, please note that a sample mgl list *myMgl* is included as a dataset in the package.  As this list is complete it can be used to try any of the *make* functions.
+
+---
+
+```{r,echo = F}
+library(knitr)
+hook1 <- function(x){ gsub("```\n*```r*\n*", "", x) }
+knit_hooks$set(document = hook1)
+opts_knit$set(width = 100)
+library(mglR)
+```
+
+
+# Building the list structure
+
+## Step 1: Build an empty list.  
+An *mgl list* can be generated from gene names, *ENSG* ids, or genomic coordinates using one of the following three functions.  
+ 
+   1. colloquial gene names - `buildFromNames`  
+   2. *ENSG* gene identifiers - `buildFromEnsgs`  
+   3. a single gene region (chromosome and hg19 position range) - `buildFromRegion`
+
+Each of these functions will generate a standard list in R with length corresponding to the number of candidate genes.  Each element of this list is itself a list with length of twenty corresponding to the number of datasources.  
+
+
+
+The following are all equivalent.
+
+```{r, warning = FALSE, message = FALSE, eval = F}
+# Load the library
+library(mglR)
+
+# Build an empty list from gene names
+buildFromNames(c("RP11-109G10.2", "RP11-481A12.2", "MSMB", "NCOA4", "TIMM23")) -> exampleMgl
+
+# Build an empty list from ENSG identifiers
+buildFromEnsgs(c("ENSG00000228326", "ENSG00000230553", "ENSG00000138294", "ENSG00000138293", "ENSG00000138297")) -> exampleMgl
+
+# Build an empty list from a single gene region
+buildFromRegion(10,51518775,51600147) -> exampleMgl
+```
+For each of the above, the output is an empty, nested list.  Where the first level of heirarchy is the gene and the second is the datasource (i.e. `mgl[[gene]][[datasource]]`) 
+
+```{r}
+# The output is a nested list
+class(exampleMgl)
+# 
+# The length of the list corresponds to the number of candidate genes
+length(exampleMgl)
+names(exampleMgl)
+#
+# Each element corresponding to a gene is itself a list
+class(exampleMgl[[1]])
+names(exampleMgl[[1]])
+#
+# Currently these are empty placeholders for a particular data source
+exampleMgl[[1]][2]
+```
+
+
+## Step 2: Add elements of interest to the list.  
+Functions beginning with *add* can be used to fill in the various elements for each gene.  Only those datasources of interest need be filled in, it is no problem for elements to remain empty.
+
+*Note: the example mgl `myMgl` was too large to include in the package so the function `ex` can be used to download and load it*
+```{r, eval = c(5)}
+# Load `myMgl`, example mgl list
+ex() -> myMgl
+```
+__Element 2: *enst*__
+```{r, eval = c(5)}
+# Add transcript information 
+addEnst(myMgl) -> myMgl
+
+# example mgl[[gene]][[datasource]]
+myMgl[[1]][2]
+```
+
+__Element 3: *location*__
+```{r, eval = c(5)}
+# Add position information
+addLoc(myMgl) -> myMgl
+
+# example mgl[[gene]][[datasource]]
+myMgl[[1]][3]
+```
+
+__Element 4: *antisense*__
+```{r, eval = c(5)}
+# Add information about transcripts in antisense position 
+addAntisense(myMgl) -> myMgl
+
+# example mgl[[gene]][[datasource]]. note: none of these genes have antisense transcripts
+myMgl[[1]][4]
+```
+
+__Element 5: *go*__
+```{r, eval = c(5)}
+# Add gene ontology terms
+addGo(myMgl) -> myMgl
+
+# example mgl[[gene]][[datasource]]
+myMgl[[3]][5]
+```
+
+__Element 6: *pubmed*__
+```{r, eval = c(5)}
+# Add number of papers cataloged in PubMed
+addPubmed(myMgl) -> myMgl
+
+# example mgl[[gene]][[datasource]]
+myMgl[[4]][6]
+```
+
+__Elements 7-11: *gtex.normalized*, *gtex.gene.counts*, *gtex.transcript.counts*, *gtex.gene.rpkm*, *gtex.transcript.rpkm*__
+Even with relatively small candidate gene lists (< 10 genes), adding expression data to the list (*elements 7-11*) can be time and memory intensive.  The function works by downloading the data locally (which can be saved for future use using the flag `saveDownload = TRUE`), subsetting the datasets for the genes of interest using grep commands run by R through unix, loading the subsetted data into R and incorporating the data into the *mgl list*.  The most time consuming parts are downloading and subsetting the data.  Both of these steps can be run outside of R using the command line if preferred.
+```{r, eval = c(6,8,10)}
+# Add expression data from GTEx 
+addExpression(myMgl, download = TRUE, saveDownload = FALSE, normalized = TRUE, xpGeneReads = TRUE, xpTranscriptReads = TRUE, xpGeneRpkm = TRUE, xpTranscriptRpkm = TRUE) -> myMgl
+
+# examples mgl[[gene]][[datasource]][[tissue]][expression&covariates, people]
+# normalized expression data
+myMgl[[3]][[7]][[1]][1:3,1:3]
+# gene reads
+myMgl[[3]][[8]][[1]][,1:2]
+# transcript RPKM
+myMgl[[3]][[11]][[1]][,1:2]
+```
+
+__Element 12: *dnase*__
+```{r, eval = c(5)}
+# Add results from Maurano Nat. Genetics 2015
+addDnase(myMgl) -> myMgl
+
+# example mgl[[gene]][[datasource]]
+myMgl[[3]][12]
+```
+__Element 13: *transEqtls*__
+```{r, eval = c(5)}
+# Add transEqtl data from GTEx
+addTransEqtl(myMgl) -> myMgl
+
+# example mgl[[gene]][[datasource]][[tissue]]
+myMgl[[4]][[13]][20]
+```
+
+__Element 14: *cisEqtls*__
+```{r, eval = c(5)}
+# Add cisEqtl data from GTEx
+addCisEqtl(myMgl, download = TRUE, saveDownload = FALSE) -> myMgl
+
+# example mgl[[gene]][[datasource]][[tissue]]
+myMgl[[4]][[14]][[44]][1:3,]
+```
+
+__Element 15: *sqtlSeek*__
+```{r, eval = c(5)}
+# Add splicing QTL data from GTEx sqtlSeek algorithm
+addSqtlSeek(myMgl) -> myMgl
+
+# example mgl[[gene]][[datasource]][[tissue]]. note: none of these genes have splicing QTls as defined by sqtlSeek
+myMgl[[1]][[15]][1]
+```
+__Element 16: *sqtlAltrans*__
+```{r, eval = c(5)}
+# Add splicing QTL data from GTEx Altrans algorithm
+addSqtlAltrans(myMgl) -> myMgl
+
+# example mgl[[gene]][[datasource]][[tissue]]
+myMgl[[4]][[16]][2]
+```
+
+__Element 17: *pqtl*__
+```{r, eval = c(5)}
+# Add protein truncating variants from GTEx
+addPtv(myMgl) -> myMgl
+
+# example mgl[[gene]][[datasource]][[tissue]]
+myMgl[[4]][[17]][[1]][1:2,]
+```
+
+__Element 18: *gwasCatalog*__
+```{r, eval = c(5)}
+# Add GWAS data from the NHGRI-EBI GWAS Catalog
+addGwasCatalog(myMgl, range = 10, download = TRUE, saveDownload = FALSE) -> myMgl
+
+# example mgl[[gene]][[datasource]][GWASEntry, Details]
+myMgl[[3]][[18]][1:2,]
+```
+__Element 19: *grasp*__
+```{r, eval = F}
+# Add GWAS data from GRASP
+addGrasp(myMgl) -> myMgl
+
+# example
+#myMgl[[1]][[19]][1:3,]
+```
+
+__Element 20: *aei*__
+Please note that access to allelic ratios from GTEx requires approval and download through dbGaP.  See <http:/www.ncbi.nlm.nih.gov/gap>
+```{r, eval = F}
+# Add allelic ratios from GTEx
+addAei(myMgl, fp = '~/Downloads') -> myMgl
+
+# example mgl[[gene]][[datasource]][[tissue]][SNP,Details]
+myMgl[[4]][[20]][[1]][1:3,]
+```
+
+---
+
+# Quirks of the list
+
+## It's a list!
+The list that is created can be compared to filing cabinet.  Where the cabinet represents the entirety of the list, each drawer a different gene, and each datasource a folder within the drawer.  If you simply print the list to the screen in R, it would be like dumping an entire filing cabinet full of papers all over the floor.  Even printing one element/gene is too much and in some cases the datasource itself (i.e. the folder) is really big and even this is too much to print to the screen.  To cautiously work your way through the list, use `class` and `dim` or `length` to preview and subsetting either of lists `[[#]]` or of dataframes `[row#, column#]`.
+
+```{r}
+# check class
+class(myMgl[[3]][[12]])
+
+# check dimensions
+dim(myMgl[[3]][[12]])
+
+# print subset
+myMgl[[3]][[12]][1:3,]
+```
+
+## Working with the list
+
+Included are two functions to make navigating the mgl list a bit easier.
+
+__(1) Which elements have been added?__
+Use `listElements` to display which elements have been added or which ones are still missing.
+
+```{r}
+# display missing elements
+listElements(exampleMgl, added = FALSE)
+#
+# display elements that have already been added
+listElements(exampleMgl, added = TRUE)
+```
+__(2) One element at a time.__
+Use `listSeparate` to subset the list with just one datasource for all genes (i.e. to get ensts only for all genes)
+```{r}
+# subset the second element with ENST information
+listSeparate(myMgl, 2) -> subset
+#
+subset
+```
+
+## Gene Names
+
+ Colloquial gene names (e.g. RP11-109G10.2) are often far more convienent for every day use than ENSG identifiers (e.g. ENSG00000228326), although colloquial names are not always specific.  *biomaRt* does a phenomenal job converting between different gene names and identifiers.  However, in the case that biomaRt is not able to find a corresponding ENSG id for a given gene a warning message will be displayed.  This should be fixed using `missNames` and `fixNames` as various functions in the package rely on ENSG ids.    bkl\n In the cases where these ENSG ids are not identified through *biomaRt* and must be fixed, they can often be found by googling the gene name.  GeneCards <http://www.genecards.org/> does a particularly good job cataloging various colloquial names for a given gene and always provides the ENSG id.
+ 
+```{r}
+# Build an empty list from gene names
+buildFromNames(c("RP11-109G10.2", "RP11-481A12.2", "MSMB", "NCOA4", "TIMM23")) -> newMgl
+#
+# Gene name was not found by *biomaRt*
+newMgl[[1]][1]
+#
+# Identify missing names
+missNames(newMgl) 
+#
+# Fix missing names
+fixNames(newMgl, c('ENSG00000228326', 'ENSG00000220508')) -> newMgl
+#
+# Gene names now filled in
+newMgl[[1]][1]
+```
+
+## SNP Ids
+
+The cisEqtl data released by GTEx uses chr_pos... instead of rs numbers to identify SNPs.  In order to add rs ids use `fixSnpIds`.  It is preferable to use rs Ids for functions like `makeSnps`, `makeMultiEqtl`, `makeOverlap`, and `makeOverlapTable`.
+
+```{r, eval = F}
+# add rs Id
+fixSnpIds(myMgl) -> myMgl
+```
+
+## Dependent Elements
+
+Some elements are dependent on one another.  For example adding information from the GWAS Catalog (element 18) requires that position information for each gene (element 3) has been filled in because GWAS-based associations are pulled not only based on the assigned gene name but also on the position range of the gene.  In these instances of inter-dependent elements, if the required element has not yet been filled in an error message appears directing the user to add the required information.
+
+```{r, error = TRUE, purl = FALSE, eval = -c(2)}
+# Build list
+buildFromRegion(10,51518775,51600147) -> exampleMgl
+#
+# Add GWAS data from the NHGRI-EBI GWAS Catalog [element #18]
+addGwasCatalog(exampleMgl, range = 10, download = TRUE, saveDownload = FALSE) -> exampleMgl
+#
+# Add position information [element #3]
+addLoc(exampleMgl) -> exampleMgl
+#
+exampleMgl[[1]][[3]]
+#
+# Add GWAS data from the NHGRI-EBI GWAS Catalog [element #18]
+addGwasCatalog(exampleMgl, range = 10, download = TRUE, saveDownload = FALSE) -> exampleMgl
+#
+# example mgl[[gene]][[datasource]][GWASEntry, Details]
+exampleMgl[[3]][[18]][1:2,1:5]
+```
+
+---
+
+# Using the list
+
+## Gene Ontology
+
+Two functions `makeGo` and `makeGoSearch` are included to organize Gene Ontology terms and determine those GO terms that are shared among candidate genes.
+
+```{r}
+# summarize gene ontology (GO) terms
+makeGo(myMgl, saveFile = F) -> myGo
+#
+# output of makeGo is a list with three elements
+class(myGo)
+names(myGo)
+#
+#goRes is a list with GO terms for each gene (subset of element 5 from mgl)
+myGo[[1]][[4]]
+#
+# goTable is a dataframe with GO term and gene
+myGo[[2]][1:2,]
+#
+# goCount is a ranking of GO terms and the number of genes they are assigned to
+myGo[[3]][1:2]
+#
+# to search for genes with a specific GO term
+makeGoSearch(myMgl, 'nucleus', go = myGo, saveFile = F)
+```
+## Phenotypes
+
+Similar to the functions for summarizing Gene Ontology terms, two functions `makePhenotypes` and `makePhenotypeSearch` are included to organize GWAS-based trait associations and determine those phenotypes that are shared among candidate genes.
+
+```{r}
+# summarize phenotypes
+makePhenotypes(myMgl, saveFile = F) -> myPhenotypes
+#
+# output of makePhenotypes is a list with four elements
+class(myPhenotypes)
+names(myPhenotypes)
+#
+# phenRes is a list with GWAS-based trait associations for each gene split by datasource (NHGRI-EBI GWAS Catalog and GRASP)
+myPhenotypes[[1]][[5]]
+#
+# phenList is a list with GWAS-based trait associations for each gene 
+myPhenotypes[[2]][[4]][1:5]
+#
+# phenTable is a dataframe with phenotype and gene
+myPhenotypes[[3]][1:2,]
+#
+# phenCount is a ranking of phenotypes and the number of genes they are assigned to
+myPhenotypes[[4]][1:2]
+#
+# to search for genes with a specific GO term
+makePhenotypeSearch(myMgl, 'Mean corpuscular hemoglobin', phen = myPhenotypes, saveFile = F)
+```
+
+## SNPs
+
+Again similar to Gene Ontology terms and Phenotypes, two functions `makeSnps` and `makeSnpSearch` are included to organize genetic variants associated with candidate genes and determine those SNPs that are shared among candidate genes.
+
+```{r}
+# summarize SNPs
+makeSnps(myMgl, saveFile = F) -> mySnps
+#
+# output of makeSnps is a list with four elements
+class(mySnps)
+names(mySnps)
+#
+# snpRes is a list with SNPs for each gene split by datasource
+mySnps[[1]][[5]]
+#
+# snpList is a list with SNPs for each gene 
+mySnps[[2]][[5]]
+#
+# snpTable is a dataframe with SNP and gene
+mySnps[[3]][1:3,]
+#
+# snpCount is a ranking of SNPs and the number of genes they are assigned to
+mySnps[[4]][1:3]
+#
+# to search for genes with a specific SNP
+makeSnpSearch(myMgl, 'rs2611504', snp = mySnps, saveFile = F)
+```
+## Overlap
+Two functions `makeOverlap` and `makeOverlapTable` have been developed to identify SNPs that are assigned to a given gene for multiple reasons, e.g. as both a cis-eQTL and a GWAS based variant.  `makeOverlap` identifies overlapping SNPs for two user-defined groups, while `makeOverlapTable` gives the details for these SNPs.
+
+```{r}
+# find SNPs that are both cis-eQTLs and GWAS-based variants
+makeOverlap(myMgl, snpsA = 'cisEqtls', snpsB = 'gwasCatalog', saveFile = FALSE) -> myOverlap
+#
+myOverlap
+# get details for these SNPs
+makeOverlapTable(myMgl, myOverlap, saveFile = FALSE) -> myOverlapTable
+#[[gene]][[snp]][[datasource]]
+myOverlapTable[[1]][[1]][[1]][,1:3]
+myOverlapTable[[1]][[1]][[2]][,1:3]
+```
+
+## Co-expression
+
+Two functions `makeCoXpGene` and `makeCoXpTranscript` are included to test co-expression between gene or transcript pairs in specific tissues.  For each pair of genes or transcripts in the specified tissues, co-expression is tested using cor.test.  Two flags `makePlot` and `saveFile` can be used to save a pdf with corresponding plots and/or a csv with the results of cor.test.  The plot includes expression of one gene on the x-axis and the other gene on the y-axis with results of the cor.test as part of the figure legend.  The csv includes the cor.test output for all combinations of genes or transcripts in the specified tissues. 
+
+```{r}
+# plot co-expressions between genes using count normalized data
+makeCoXpGene(myMgl, gene = c("RP11-109G10.2", "NCOA4"), makePlot = FALSE, saveFile = FALSE, data = 7, tissue = c('Prostate'))
+```
+
+```{r, echo = FALSE, fig.height = 4, fig.width = 6}
+# plot co-expressions between genes using count normalized data
+mgl = myMgl
+genes = c('RP11-109G10.2', 'NCOA4')
+makePlot = TRUE
+data = 7 
+tissue = 'Prostate'
+
+    ns <- combn(1:length(genes), 2)
+    res <- list()
+    for (x in 1:dim(ns)[2]) {
+        res[[x]] <- list()
+        for (t in 1:length(tissue)) {
+            n1 <- ns[1, x]
+            n2 <- ns[2, x]
+            g1 <- as.numeric(as.character(mgl[[which(names(mgl) == 
+                genes[n1])]][[data]][[which(names(mgl[[1]][[data]]) == 
+                tissue[t])]][1, ]))
+            g2 <- as.numeric(as.character(mgl[[which(names(mgl) == 
+                genes[n2])]][[data]][[which(names(mgl[[1]][[data]]) == 
+                tissue[t])]][1, ]))
+            res[[x]][[t]] <- cor.test(g1, g2)
+}}
+    if (makePlot == TRUE) {
+        for (x in 1:dim(ns)[2]) {
+            for (t in 1:length(tissue)) {
+                n1 <- ns[1, x]
+                n2 <- ns[2, x]
+                g1 <- as.numeric(as.character(mgl[[which(names(mgl) == 
+                  genes[n1])]][[data]][[which(names(mgl[[1]][[data]]) == 
+                  tissue[t])]][1, ]))
+                g2 <- as.numeric(as.character(mgl[[which(names(mgl) == 
+                  genes[n2])]][[data]][[which(names(mgl[[1]][[data]]) == 
+                  tissue[t])]][1, ]))
+                layout(rbind(1, 2), heights = c(7, 1))
+                par(mar = c(5.1, 4.1, 4.1, 2.1))
+                plot(g1, g2, main = paste("CoExpression of \n", 
+                  genes[n1], " and ", genes[n2], "\n in ", tissue[t], 
+                  sep = ""), xlab = paste(genes[n1], " (", names(mgl[[which(names(mgl) == 
+                  genes[n1])]])[data], ")", sep = ""), ylab = paste(genes[n2], 
+                  " (", names(mgl[[which(names(mgl) == genes[n1])]])[data], 
+                  ")", sep = ""), cex = 0.7)
+                par(mar = c(0, 0, 0, 0))
+                plot.new()
+                legend("center", legend = paste(res[[x]][[t]]$method, 
+                  " estimate: ", round(res[[x]][[t]]$estimate, 
+                    digits = 2), " , p-value: ", round(res[[x]][[t]]$p.value, 
+                    digits = 4), sep = ""), cex = 0.7)
+}}}
+```
+
+## DNAse hypersensitivity sites
+To show only those results from Maurano et. al that are significant
+
+```{r}
+# filter DNAse results for significant p-values
+makeDnaseSig(myMgl) -> results
+#
+results
+```
+
+## Allelic ratios
+
+Allelic ratios can be plotted for one gene at a time using `makeAeiPlot`.  A single pdf entitle 'AeiPlot_*gene*.pdf' will be generated with each individual as a separate page in the document.  Tissues are displayed on the x-axis and allelic ratios on the y-axis.  Each do represents an individual SNP.  Dot colors correspond to the SNP (identified by its position), while dot shapes correspond to the class of SNP - intron, exon, etc.  The results used to generate the plot can be saved in an csv file using the 'saveFile' flag.
+
+```{r, eval = F}
+# plot allelic ratios
+makeAeiPlot(myMgl, gene = c('NCOA4'), saveFile = FALSE) -> myAeiPlot
+```
+
+## MultiEqtl
+
+The function `makeMultiEqtl` was designed to identify eQTL variants that serve as eQTLs for multiple candidate genes. The search can be done in a tissue-specific fashion by specifying a particular tissue using the `tissue` flag or irrespective of tissue by using `tissue = 'All'`. There are two optional flags `makePlot` and `saveFile` that will generate, respectively, either a pdf or a csv summarizing the results. 
+
+```{r}
+# if there are no MultiEqtls in a given tissue an error message appears 
+makeMultiEqtl(myMgl, makePlot = FALSE, saveFile = FALSE, cis = TRUE, trans = TRUE, tissue = c('All', 'Prostate')) -> myMultiEqtl
+#
+# summarize MultiEqtls
+makeMultiEqtl(myMgl, makePlot = FALSE, saveFile = FALSE, cis = TRUE, trans = TRUE, tissue = c('All')) -> myMultiEqtl
+#
+# output of makeMultiEqtl is a list with four elements
+# note in the event of multiple tissues the output is a list with length corresponding to the number tissues where each element is a list with four elements as described below
+class(myMultiEqtl)
+names(myMultiEqtl)
+#
+# fullTable is a dataframe where each row is an eQTL
+myMultiEqtl[[1]][1:3,]
+#
+# ranking is a list of tables ranking the number of genes each eQTL is assigned to  
+myMultiEqtl[[2]][[1]][1:3]
+#
+# topSnps is a list of vectors of eQTLs appearing for the maximum number of genes (i.e. if the most number of genes an eQTL applies to is 3 all eQTLs assinged to 3 genes will be displayed)
+myMultiEqtl[[3]]
+#
+# topSummary shows the information from fullTable (gene, tissue, snp) for those snps included in topSnps
+myMultiEqtl[[4]]
+```
+
+### Summary
+
+The function `makeSummary` was designed to give a quick overview of the number of SNPs identified for each candidate gene.  Of particular interest maybe those genes with molecular-based SNPs (e.g eQTLs) that do not have GWAS hits and vice versa.
+
+```{r}
+# summarize associated SNPs
+makeSummary(myMgl, saveFile = F) -> summary
+#
+summary
+```
